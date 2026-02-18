@@ -101,7 +101,7 @@ export const FilterResponseDtoSchema = z.object({
 });
 
 export const FilterLogSchema = z.object({
-  id: z.number(),
+  id: z.union([z.number(), z.string()]),
   streamId: z.number(),
   passed: z.boolean(),
   reason: z.string().nullable().optional(),

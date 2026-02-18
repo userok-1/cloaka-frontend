@@ -22,7 +22,10 @@ export const logsApi = {
       sort: params.sort ?? 'desc',
       streamIds: params.streamIds,
     });
-    const response = await apiRequest<unknown>('/logger/filter-logs', {
+    const response = await apiRequest<{
+      data?: Array<Record<string, unknown>>;
+      total?: number;
+    }>('/logger/filter-logs', {
       params: {
         page: query.page,
         limit: query.limit,
@@ -30,7 +33,20 @@ export const logsApi = {
         ...(query.streamIds ? { streamIds: query.streamIds } : {}),
       },
     });
-    return FilterLogsResponseSchema.parse(response);
+
+    const rawData = response?.data ?? [];
+    const normalized = {
+      data: rawData.map((item) => ({
+        id: item.id,
+        streamId: Number(item.stream_id ?? item.streamId ?? 0),
+        passed: Boolean(item.passed),
+        reason: item.reason ?? null,
+        metadata: item.metadata ?? null,
+        createdAt: String(item.timestamp ?? item.createdAt ?? ''),
+      })),
+      total: response?.total,
+    };
+    return FilterLogsResponseSchema.parse(normalized);
   },
 
   getErrors: async (params: {
