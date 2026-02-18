@@ -100,6 +100,39 @@ export const FilterResponseDtoSchema = z.object({
   url: z.string().url(),
 });
 
+export const FilterLogSchema = z.object({
+  id: z.number(),
+  streamId: z.number(),
+  passed: z.boolean(),
+  reason: z.string().nullable().optional(),
+  metadata: z.unknown().nullable().optional(),
+  createdAt: z.string(),
+});
+
+export const ErrorLogSchema = z.object({
+  id: z.number(),
+  streamId: z.number(),
+  errorType: z.string(),
+  message: z.string(),
+  stackTrace: z.string().nullable().optional(),
+  metadata: z.unknown().nullable().optional(),
+  createdAt: z.string(),
+});
+
+export const GetLogsQuery = z.object({
+  page: z.number().int().min(1).optional().default(1),
+  limit: z.number().int().min(1).max(1000).optional().default(50),
+  sort: SortOrderSchema.optional().default('desc'),
+  streamIds: z.string().optional(),
+});
+
+export function PaginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
+  return z.object({
+    data: z.array(itemSchema),
+    total: z.number().optional(),
+  });
+}
+
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type UserRegisterDto = z.infer<typeof UserRegisterDtoSchema>;
 export type UserLoginDto = z.infer<typeof UserLoginDtoSchema>;
@@ -110,3 +143,6 @@ export type Stream = z.infer<typeof StreamSchema>;
 export type StreamDetectorsOptions = z.infer<typeof StreamDetectorsOptionsSchema>;
 export type StreamDetectorsOptionsDto = z.infer<typeof StreamDetectorsOptionsDtoSchema>;
 export type FilterResponseDto = z.infer<typeof FilterResponseDtoSchema>;
+export type FilterLog = z.infer<typeof FilterLogSchema>;
+export type ErrorLog = z.infer<typeof ErrorLogSchema>;
+export type GetLogsQuery = z.infer<typeof GetLogsQuery>;

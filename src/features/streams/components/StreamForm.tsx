@@ -1,8 +1,35 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CreateStreamDto, CreateStreamDtoSchema, Stream } from '../../../shared/lib/zod-schemas';
+import {
+  CreateStreamDto,
+  Stream,
+  StreamModeSchema,
+  StreamDetectorsOptionsDtoSchema,
+} from '../../../shared/lib/zod-schemas';
 import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
+import { z } from 'zod';
+
+const StreamFormSchema = z.object({
+  name: z.string().min(2).max(100),
+  landingUrl: z.string().url(),
+  whiteUrl: z.string().url(),
+  mode: StreamModeSchema,
+  detectorsOptions: StreamDetectorsOptionsDtoSchema.optional(),
+  allowedGeos: z
+    .array(z.string().length(2).toUpperCase())
+    .max(50)
+    .optional()
+    .refine(
+      (arr) => {
+        if (!arr) return true;
+        return new Set(arr).size === arr.length;
+      },
+      { message: 'Geo codes must be unique' }
+    ),
+});
+
+type StreamFormData = z.infer<typeof StreamFormSchema>;
 
 interface StreamFormProps {
   defaultValues?: Partial<Stream>;
@@ -24,8 +51,8 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<CreateStreamDto>({
-    resolver: zodResolver(CreateStreamDtoSchema),
+  } = useForm<StreamFormData>({
+    resolver: zodResolver(StreamFormSchema),
     defaultValues: {
       name: defaultValues?.name || '',
       landingUrl: defaultValues?.landingUrl || '',
@@ -38,8 +65,12 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
 
   const allowedGeos = watch('allowedGeos') || [];
 
+  const handleFormSubmit = (data: StreamFormData) => {
+    return onSubmit(data as CreateStreamDto);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <Input
         label="Stream Name"
         placeholder="My Campaign"

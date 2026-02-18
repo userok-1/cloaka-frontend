@@ -6,7 +6,7 @@ import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { StreamForm } from '../components/StreamForm';
-import { UpdateStreamDto } from '../../../shared/lib/zod-schemas';
+import { CreateStreamDto } from '../../../shared/lib/zod-schemas';
 import { toast } from '../../../shared/ui/toast';
 
 export function StreamDetailPage() {
@@ -21,7 +21,7 @@ export function StreamDetailPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateStreamDto) => streamsApi.update(Number(id), data),
+    mutationFn: (data: CreateStreamDto) => streamsApi.update(Number(id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['streams'] });
       toast.success('Stream updated successfully');
@@ -29,7 +29,7 @@ export function StreamDetailPage() {
     },
   });
 
-  const handleSubmit = async (data: UpdateStreamDto) => {
+  const handleSubmit = async (data: CreateStreamDto) => {
     setIsLoading(true);
     try {
       await updateMutation.mutateAsync(data);
