@@ -132,8 +132,11 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
           placeholder="US,GB,CA (comma-separated, uppercase)"
           error={errors.allowedGeos?.message}
           {...register('allowedGeos', {
-            setValueAs: (v: string) =>
-              v ? v.split(',').map((code) => code.trim().toUpperCase()) : [],
+            setValueAs: (v: unknown) => {
+              if (Array.isArray(v)) return v.filter((code) => typeof code === 'string');
+              if (typeof v === 'string') return v ? v.split(',').map((code) => code.trim().toUpperCase()) : [];
+              return [];
+            },
           })}
         />
         {allowedGeos.length > 0 && (
