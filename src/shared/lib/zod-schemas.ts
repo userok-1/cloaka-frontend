@@ -111,8 +111,10 @@ export const FilterLogSchema = z.object({
 
 export const ErrorLogSchema = z.object({
   id: z.number(),
-  streamId: z.number(),
-  errorType: z.string(),
+  statusCode: z.number().optional(),
+  module: z.string().optional(),
+  controller: z.string().optional(),
+  handler: z.string().optional(),
   message: z.string(),
   stackTrace: z.string().nullable().optional(),
   metadata: z.unknown().nullable().optional(),

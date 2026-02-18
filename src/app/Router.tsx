@@ -7,7 +7,7 @@ import { StreamsListPage } from '../features/streams/pages/StreamsListPage';
 import { CreateStreamPage } from '../features/streams/pages/CreateStreamPage';
 import { StreamDetailPage } from '../features/streams/pages/StreamDetailPage';
 import { TrashPage } from '../features/streams/pages/TrashPage';
-import { FilterLogsPage } from '../features/logs/pages/FilterLogsPage';
+import { LogsPage } from '../features/logs/pages/LogsPage';
 import { AccessDeniedPage } from '../shared/pages/AccessDeniedPage';
 import { NotFoundPage } from '../shared/pages/NotFoundPage';
 import { AuthGuard } from '../shared/guards/AuthGuard';
@@ -70,7 +70,7 @@ export function Router() {
             path="/logs"
             element={
               <AuthGuard>
-                <FilterLogsPage />
+                <LogsPage />
               </AuthGuard>
             }
           />
