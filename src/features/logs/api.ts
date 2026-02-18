@@ -61,6 +61,9 @@ export const logsApi = {
     });
     const response = await apiRequest<{
       data?: Array<Record<string, unknown>>;
+      errors?: Array<Record<string, unknown>>;
+      results?: Array<Record<string, unknown>>;
+      items?: Array<Record<string, unknown>>;
       total?: number;
     }>('/logger/errors', {
       params: {
@@ -70,20 +73,33 @@ export const logsApi = {
       },
     });
 
-    const rawData = response?.data ?? [];
+    const dataMaybe = response?.data;
+    const rawData: Array<Record<string, unknown>> = Array.isArray(dataMaybe)
+      ? dataMaybe
+      : dataMaybe && typeof dataMaybe === 'object' && Array.isArray((dataMaybe as Record<string, unknown>).data)
+        ? ((dataMaybe as Record<string, unknown>).data as Array<Record<string, unknown>>)
+        : dataMaybe && typeof dataMaybe === 'object' && Array.isArray((dataMaybe as Record<string, unknown>).items)
+          ? ((dataMaybe as Record<string, unknown>).items as Array<Record<string, unknown>>)
+          : response?.errors ??
+            response?.results ??
+            response?.items ??
+            (Array.isArray(response) ? response : []);
+
     const normalized = {
       data: rawData.map((item) => ({
         id: item.id != null ? item.id : '',
-        statusCode:
-          typeof item.status_code !== 'undefined'
-            ? Number(item.status_code)
-            : typeof item.statusCode !== 'undefined'
-              ? Number(item.statusCode)
-              : undefined,
+        statusCode: (() => {
+          const a = item.status_code ?? item.statusCode;
+          if (a === undefined || a === null) return undefined;
+          const n = Number(a);
+          return Number.isNaN(n) ? undefined : n;
+        })(),
         module: item.module != null ? String(item.module) : undefined,
         controller: item.controller != null ? String(item.controller) : undefined,
         handler: item.handler != null ? String(item.handler) : undefined,
-        message: String(item.message ?? ''),
+        message: String(
+          item.message ?? item.error_message ?? item.err ?? item.error ?? ''
+        ),
         stackTrace:
           item.stack_trace != null
             ? String(item.stack_trace)
@@ -91,7 +107,9 @@ export const logsApi = {
               ? String(item.stackTrace)
               : undefined,
         metadata: item.metadata ?? undefined,
-        createdAt: String(item.timestamp ?? item.createdAt ?? item.created_at ?? ''),
+        createdAt: String(
+          item.timestamp ?? item.createdAt ?? item.created_at ?? ''
+        ),
       })),
       total: response?.total,
     };
