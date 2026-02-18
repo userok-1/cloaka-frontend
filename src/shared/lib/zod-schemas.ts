@@ -110,7 +110,7 @@ export const FilterLogSchema = z.object({
 });
 
 export const ErrorLogSchema = z.object({
-  id: z.number(),
+  id: z.union([z.string(), z.number()]),
   statusCode: z.number().optional(),
   module: z.string().optional(),
   controller: z.string().optional(),

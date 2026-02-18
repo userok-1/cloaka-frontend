@@ -59,13 +59,42 @@ export const logsApi = {
       limit: params.limit ?? 50,
       sort: params.sort ?? 'desc',
     });
-    const response = await apiRequest<unknown>('/logger/errors', {
+    const response = await apiRequest<{
+      data?: Array<Record<string, unknown>>;
+      total?: number;
+    }>('/logger/errors', {
       params: {
         page: query.page,
         limit: query.limit,
         sort: query.sort,
       },
     });
-    return ErrorLogsResponseSchema.parse(response);
+
+    const rawData = response?.data ?? [];
+    const normalized = {
+      data: rawData.map((item) => ({
+        id: item.id != null ? item.id : '',
+        statusCode:
+          typeof item.status_code !== 'undefined'
+            ? Number(item.status_code)
+            : typeof item.statusCode !== 'undefined'
+              ? Number(item.statusCode)
+              : undefined,
+        module: item.module != null ? String(item.module) : undefined,
+        controller: item.controller != null ? String(item.controller) : undefined,
+        handler: item.handler != null ? String(item.handler) : undefined,
+        message: String(item.message ?? ''),
+        stackTrace:
+          item.stack_trace != null
+            ? String(item.stack_trace)
+            : item.stackTrace != null
+              ? String(item.stackTrace)
+              : undefined,
+        metadata: item.metadata ?? undefined,
+        createdAt: String(item.timestamp ?? item.createdAt ?? item.created_at ?? ''),
+      })),
+      total: response?.total,
+    };
+    return ErrorLogsResponseSchema.parse(normalized);
   },
 };
