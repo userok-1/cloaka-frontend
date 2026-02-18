@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { Plus, Trash2, Eye, Copy } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Plus, Trash2, Eye, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
 import { LoadingState } from '../../../shared/ui/LoadingState';
@@ -13,11 +13,14 @@ import { useState } from 'react';
 
 export function StreamsListPage() {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const limit = 10;
 
   const { data: streams = [], isLoading } = useQuery({
-    queryKey: ['streams', 'alive'],
-    queryFn: () => streamsApi.getAll({ scope: 'alive' }),
+    queryKey: ['streams', 'alive', page],
+    queryFn: () => streamsApi.getAll({ scope: 'alive', page, limit }),
   });
 
   const trashMutation = useMutation({
@@ -47,9 +50,15 @@ export function StreamsListPage() {
     toast.success('URL copied to clipboard');
   };
 
+  const handlePageChange = (newPage: number) => {
+    setSearchParams({ page: String(newPage) });
+  };
+
   const filteredStreams = streams.filter((stream) =>
     stream.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const canNextPage = streams.length === limit;
 
   if (isLoading) {
     return (
@@ -153,6 +162,30 @@ export function StreamsListPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {filteredStreams.length > 0 && (
+          <div className="flex items-center justify-between pt-4">
+            <div className="text-sm text-zinc-400">
+              Page <span className="font-medium text-zinc-100">{page}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </button>
+              <button
+                onClick={() => handlePageChange(page + 1)}
+                disabled={!canNextPage}
+                className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -1,12 +1,14 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
+  Home,
   LayoutDashboard,
   Menu,
   User,
   Trash2,
   LogOut,
   ChevronLeft,
+  FileText,
 } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store';
 import { authApi } from '../../features/auth/api';
@@ -34,7 +36,9 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const navItems = [
+    { path: '/', label: 'Home', icon: Home },
     { path: '/streams', label: 'Streams', icon: LayoutDashboard },
+    { path: '/logs', label: 'Logs', icon: FileText },
     { path: '/streams/trash', label: 'Trash', icon: Trash2 },
   ];
 
@@ -47,7 +51,12 @@ export function Layout({ children }: LayoutProps) {
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
           {!collapsed && (
-            <h1 className="text-xl font-semibold text-zinc-100">cloaka</h1>
+            <button
+              onClick={() => navigate('/')}
+              className="text-xl font-semibold text-zinc-100 hover:text-zinc-200 transition-colors"
+            >
+              cloaka
+            </button>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -86,8 +95,10 @@ export function Layout({ children }: LayoutProps) {
       <div className="flex-1 flex flex-col">
         <header className="h-16 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6">
           <div className="text-sm text-zinc-400">
+            {location.pathname === '/' && 'Dashboard'}
             {location.pathname === '/streams' && 'Streams'}
-            {location.pathname === '/streams/trash' && 'Trash'}
+            {location.pathname.startsWith('/streams/') && 'Stream Details'}
+            {location.pathname === '/logs' && 'Logs'}
             {location.pathname === '/profile' && 'Profile'}
           </div>
 
