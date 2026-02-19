@@ -43,6 +43,8 @@ export const StreamDetectorsOptionsDtoSchema = z
   })
   .catchall(z.boolean());
 
+const IpOrCidrSchema = z.string().min(1, 'Required').max(50);
+
 export const CreateStreamDtoSchema = z.object({
   name: z.string().min(2).max(100),
   landingUrl: z.string().url(),
@@ -60,6 +62,25 @@ export const CreateStreamDtoSchema = z.object({
       },
       { message: 'Geo codes must be unique' }
     ),
+  // Backend: CreateStreamDto.ipLists (StreamIpListsDto)
+  ipLists: z
+    .object({
+      ipWhitelist: z
+        .array(IpOrCidrSchema)
+        .max(20, 'Max 20 entries')
+        .refine((arr) => new Set(arr).size === arr.length, {
+          message: 'IP whitelist entries must be unique',
+        })
+        .nullable(),
+      ipBlacklist: z
+        .array(IpOrCidrSchema)
+        .max(20, 'Max 20 entries')
+        .refine((arr) => new Set(arr).size === arr.length, {
+          message: 'IP blacklist entries must be unique',
+        })
+        .nullable(),
+    })
+    .optional(),
 });
 
 export const UpdateStreamDtoSchema = CreateStreamDtoSchema.partial();
@@ -89,6 +110,15 @@ export const StreamSchema = z.object({
   landingUrl: z.string().url(),
   whiteUrl: z.string().url(),
   allowedGeos: z.array(z.string()).nullable().optional(),
+  ipLists: z
+    .object({
+      ipWhitelist: z.array(z.string()).nullable().optional(),
+      ipBlacklist: z.array(z.string()).nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  ipWhitelist: z.array(z.string()).nullable().optional(),
+  ipBlacklist: z.array(z.string()).nullable().optional(),
   mode: StreamModeSchema,
   detectorsOptions: StreamDetectorsOptionsSchema,
   createdAt: z.string(),

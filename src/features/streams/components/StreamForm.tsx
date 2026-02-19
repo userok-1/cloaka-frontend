@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   CreateStreamDto,
@@ -9,6 +9,7 @@ import {
 import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
 import { z } from 'zod';
+import { Plus, X } from 'lucide-react';
 
 const StreamFormSchema = z.object({
   name: z.string().min(2).max(100),
@@ -27,9 +28,40 @@ const StreamFormSchema = z.object({
       },
       { message: 'Geo codes must be unique' }
     ),
+  // Match backend StreamIpListsDto: max 20, unique (after trim + lowercase)
+  ipWhitelist: z
+    .array(z.string())
+    .max(20, 'Max 20 entries')
+    .optional()
+    .refine(
+      (arr) => {
+        if (!arr) return true;
+        const normalized = arr.map((s) => s.trim().toLowerCase()).filter(Boolean);
+        return new Set(normalized).size === normalized.length;
+      },
+      { message: 'IP whitelist entries must be unique' }
+    )
+    .transform((v) => v ?? []),
+  ipBlacklist: z
+    .array(z.string())
+    .max(20, 'Max 20 entries')
+    .optional()
+    .refine(
+      (arr) => {
+        if (!arr) return true;
+        const normalized = arr.map((s) => s.trim().toLowerCase()).filter(Boolean);
+        return new Set(normalized).size === normalized.length;
+      },
+      { message: 'IP blacklist entries must be unique' }
+    )
+    .transform((v) => v ?? []),
 });
 
 type StreamFormData = z.infer<typeof StreamFormSchema>;
+type StreamFormDataWithArrays = Omit<StreamFormData, 'ipWhitelist' | 'ipBlacklist'> & {
+  ipWhitelist: string[];
+  ipBlacklist: string[];
+};
 
 interface StreamFormProps {
   defaultValues?: Partial<Stream>;
@@ -51,8 +83,9 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<StreamFormData>({
-    resolver: zodResolver(StreamFormSchema),
+    control,
+  } = useForm<StreamFormDataWithArrays>({
+    resolver: zodResolver(StreamFormSchema) as never,
     defaultValues: {
       name: defaultValues?.name || '',
       landingUrl: defaultValues?.landingUrl || '',
@@ -60,13 +93,54 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       mode: defaultValues?.mode || 'redirect',
       detectorsOptions: defaultValues?.detectorsOptions || DEFAULT_DETECTORS,
       allowedGeos: defaultValues?.allowedGeos || [],
+      ipWhitelist:
+        defaultValues?.ipLists?.ipWhitelist?.length ?? defaultValues?.ipWhitelist?.length
+          ? (defaultValues?.ipLists?.ipWhitelist ?? defaultValues?.ipWhitelist ?? [])
+          : [''],
+      ipBlacklist:
+        defaultValues?.ipLists?.ipBlacklist?.length ?? defaultValues?.ipBlacklist?.length
+          ? (defaultValues?.ipLists?.ipBlacklist ?? defaultValues?.ipBlacklist ?? [])
+          : [''],
     },
   });
 
   const allowedGeos = watch('allowedGeos') || [];
 
-  const handleFormSubmit = (data: StreamFormData) => {
-    return onSubmit(data as CreateStreamDto);
+  const {
+    fields: whitelistFields,
+    append: appendWhitelist,
+    remove: removeWhitelist,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- useFieldArray name inference with optional schema fields
+  } = useFieldArray({ control, name: 'ipWhitelist' } as any);
+
+  const {
+    fields: blacklistFields,
+    append: appendBlacklist,
+    remove: removeBlacklist,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- useFieldArray name inference with optional schema fields
+  } = useFieldArray({ control, name: 'ipBlacklist' } as any);
+
+  const addWhitelistRow = () => (appendWhitelist as (v: string) => void)('');
+  const addBlacklistRow = () => (appendBlacklist as (v: string) => void)('');
+
+  const handleFormSubmit = (data: StreamFormDataWithArrays) => {
+    // Normalize like backend StreamIpListsDto: trim, lowercase, filter empty, null if empty
+    const normalizeIpList = (arr: string[] | undefined): string[] | null => {
+      if (!Array.isArray(arr)) return null;
+      const out = arr
+        .map((v) => (typeof v === 'string' ? v.trim().toLowerCase() : ''))
+        .filter(Boolean);
+      return out.length ? out : null;
+    };
+    const { ipWhitelist: w, ipBlacklist: b, ...rest } = data;
+    const payload: CreateStreamDto = {
+      ...rest,
+      ipLists: {
+        ipWhitelist: normalizeIpList(w),
+        ipBlacklist: normalizeIpList(b),
+      },
+    };
+    return onSubmit(payload);
   };
 
   return (
@@ -151,6 +225,90 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             ))}
           </div>
         )}
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-zinc-200 mb-2">
+            IP Whitelist
+          </label>
+          <p className="text-xs text-zinc-500 mb-2">
+            IP or CIDR (e.g. 192.168.1.1 or 10.0.0.0/8). Max 20 entries, unique.
+          </p>
+          {errors.ipWhitelist?.message && (
+            <p className="text-xs text-red-400 mb-2">{errors.ipWhitelist.message}</p>
+          )}
+          <div className="space-y-2">
+            {whitelistFields.map((field, index) => (
+              <div key={field.id} className="flex gap-2 items-center">
+                <Input
+                  placeholder="e.g. 192.168.1.1 or 10.0.0.0/8"
+                  className="flex-1"
+                  {...register(`ipWhitelist.${index}`)}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeWhitelist(index)}
+                  className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+                  title="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={addWhitelistRow}
+              className="gap-2"
+              disabled={whitelistFields.length >= 20}
+            >
+              <Plus className="w-4 h-4" />
+              Add IP or network
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-200 mb-2">
+            IP Blacklist
+          </label>
+          <p className="text-xs text-zinc-500 mb-2">
+            IP or CIDR to block. Max 20 entries, unique.
+          </p>
+          {errors.ipBlacklist?.message && (
+            <p className="text-xs text-red-400 mb-2">{errors.ipBlacklist.message}</p>
+          )}
+          <div className="space-y-2">
+            {blacklistFields.map((field, index) => (
+              <div key={field.id} className="flex gap-2 items-center">
+                <Input
+                  placeholder="e.g. 192.168.1.1 or 10.0.0.0/8"
+                  className="flex-1"
+                  {...register(`ipBlacklist.${index}`)}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeBlacklist(index)}
+                  className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+                  title="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={addBlacklistRow}
+              className="gap-2"
+              disabled={blacklistFields.length >= 20}
+            >
+              <Plus className="w-4 h-4" />
+              Add IP or network
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
