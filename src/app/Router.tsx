@@ -3,6 +3,7 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { ProfilePage } from '../features/auth/pages/ProfilePage';
 import { HomePage } from '../features/home/pages/HomePage';
+import { UsersPage } from '../features/users/pages/UsersPage';
 import { StreamsListPage } from '../features/streams/pages/StreamsListPage';
 import { CreateStreamPage } from '../features/streams/pages/CreateStreamPage';
 import { StreamDetailPage } from '../features/streams/pages/StreamDetailPage';
@@ -11,6 +12,7 @@ import { LogsPage } from '../features/logs/pages/LogsPage';
 import { AccessDeniedPage } from '../shared/pages/AccessDeniedPage';
 import { NotFoundPage } from '../shared/pages/NotFoundPage';
 import { AuthGuard } from '../shared/guards/AuthGuard';
+import { RoleGuard } from '../shared/guards/RoleGuard';
 import { ErrorBoundary } from '../shared/ui/ErrorBoundary';
 
 export function Router() {
@@ -27,6 +29,16 @@ export function Router() {
             element={
               <AuthGuard>
                 <HomePage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <AuthGuard>
+                <RoleGuard allowedRoles={['admin']}>
+                  <UsersPage />
+                </RoleGuard>
               </AuthGuard>
             }
           />

@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Menu,
   User,
+  Users,
   Trash2,
   LogOut,
   ChevronLeft,
@@ -35,12 +36,13 @@ export function Layout({ children }: LayoutProps) {
     }
   };
 
-  const navItems = [
+  const navItems: { path: string; label: string; icon: typeof Home; adminOnly?: boolean }[] = [
     { path: '/', label: 'Home', icon: Home },
+    { path: '/users', label: 'Users', icon: Users, adminOnly: true },
     { path: '/streams', label: 'Streams', icon: LayoutDashboard },
     { path: '/logs', label: 'Logs', icon: FileText },
     { path: '/streams/trash', label: 'Trash', icon: Trash2 },
-  ];
+  ].filter((item) => !item.adminOnly || user?.role === 'admin');
 
   return (
     <div className="min-h-screen bg-zinc-950 flex">
@@ -96,6 +98,7 @@ export function Layout({ children }: LayoutProps) {
         <header className="h-16 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6">
           <div className="text-sm text-zinc-400">
             {location.pathname === '/' && 'Dashboard'}
+            {location.pathname === '/users' && 'Users'}
             {location.pathname === '/streams' && 'Streams'}
             {location.pathname.startsWith('/streams/') && 'Stream Details'}
             {location.pathname === '/logs' && 'Logs'}

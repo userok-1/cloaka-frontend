@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Trash2, Inbox, Users } from 'lucide-react';
 import { streamsApi } from '../api';
@@ -8,12 +8,21 @@ import { EmptyState } from '../../../shared/ui/EmptyState';
 import { confirmDialog } from '../../../shared/ui/ConfirmDialog';
 import { toast } from '../../../shared/ui/toast';
 import { Stream } from '../../../shared/lib/zod-schemas';
+import { useAuthStore } from '../../auth/store';
 
 type TrashTab = 'streams' | 'users';
 
 export function TrashPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
   const [activeTab, setActiveTab] = useState<TrashTab>('streams');
+
+  useEffect(() => {
+    if (!isAdmin && activeTab === 'users') {
+      setActiveTab('streams');
+    }
+  }, [isAdmin, activeTab]);
 
   const { data: streams = [], isLoading } = useQuery({
     queryKey: ['streams', 'deleted'],
@@ -82,19 +91,21 @@ export function TrashPage() {
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
                 )}
               </button>
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`pb-3 px-1 text-sm font-medium transition-colors relative ${
-                  activeTab === 'users'
-                    ? 'text-zinc-100'
-                    : 'text-zinc-400 hover:text-zinc-300'
-                }`}
-              >
-                Users
-                {activeTab === 'users' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
-                )}
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`pb-3 px-1 text-sm font-medium transition-colors relative ${
+                    activeTab === 'users'
+                      ? 'text-zinc-100'
+                      : 'text-zinc-400 hover:text-zinc-300'
+                  }`}
+                >
+                  Users
+                  {activeTab === 'users' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -172,7 +183,7 @@ export function TrashPage() {
             )
           )}
 
-          {activeTab === 'users' && (
+          {activeTab === 'users' && isAdmin && (
             <EmptyState
               icon={Users}
               title="No deleted users"
