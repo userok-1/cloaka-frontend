@@ -79,15 +79,15 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       />
 
       <Input
-        label="Landing URL"
-        placeholder="https://example.com/landing"
+        label="Offer URL"
+        placeholder="https://example.com/offer"
         error={errors.landingUrl?.message}
         {...register('landingUrl')}
       />
 
       <Input
         label="White URL"
-        placeholder="https://example.com/safe"
+        placeholder="https://example.com/white"
         error={errors.whiteUrl?.message}
         {...register('whiteUrl')}
       />

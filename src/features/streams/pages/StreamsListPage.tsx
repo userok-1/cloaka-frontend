@@ -45,7 +45,8 @@ export function StreamsListPage() {
   };
 
   const handleCopyUrl = (streamId: number) => {
-    const url = `${window.location.origin}/api/r/${streamId}`;
+    const base = import.meta.env.VITE_API_BASE_URL ?? '/api';
+    const url = `${base.replace(/\/$/, '')}/r/${streamId}`;
     navigator.clipboard.writeText(url);
     toast.success('URL copied to clipboard');
   };
@@ -108,7 +109,7 @@ export function StreamsListPage() {
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">Name</th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">Mode</th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                    Landing URL
+                    Offer URL
                   </th>
                   <th className="text-right px-6 py-3 text-sm font-medium text-zinc-400">
                     Actions
