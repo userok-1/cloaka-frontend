@@ -10,6 +10,9 @@ import {
   LogOut,
   ChevronLeft,
   FileText,
+  BookOpen,
+  Settings,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store';
 import { authApi } from '../../features/auth/api';
@@ -21,7 +24,18 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebar-collapsed');
+    return saved === 'true';
+  });
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const newValue = !prev;
+      localStorage.setItem('sidebar-collapsed', String(newValue));
+      return newValue;
+    });
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout: clearUser } = useAuthStore();
@@ -43,6 +57,7 @@ export function Layout({ children }: LayoutProps) {
     { path: '/streams', label: 'Streams', icon: LayoutDashboard },
     { path: '/logs', label: 'Logs', icon: FileText },
     { path: '/streams/trash', label: 'Trash', icon: Trash2 },
+    { path: '/docs', label: 'Docs', icon: BookOpen },
   ].filter((item) => !item.adminOnly || user?.role === 'admin');
 
   return (
@@ -52,17 +67,17 @@ export function Layout({ children }: LayoutProps) {
           collapsed ? 'w-16' : 'w-64'
         } bg-zinc-900 border-r border-zinc-800 flex flex-col transition-all duration-200`}
       >
-        <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
+        <div className="h-28 flex items-center justify-between px-4 border-b border-zinc-800">
           {!collapsed && (
             <button
               onClick={() => navigate('/')}
               className="hover:opacity-80 transition-opacity"
             >
-              <img src={logoImg} alt="cloaka" className="h-8" />
+              <img src={logoImg} alt="cloaka" className="h-16" />
             </button>
           )}
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleCollapsed}
             className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
           >
             {collapsed ? (
@@ -93,6 +108,31 @@ export function Layout({ children }: LayoutProps) {
             );
           })}
         </nav>
+
+        <div className="p-3 border-t border-zinc-800 space-y-1">
+          <Link
+            to="/help"
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              location.pathname === '/help'
+                ? 'bg-zinc-800 text-zinc-100'
+                : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
+            }`}
+          >
+            <HelpCircle className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="text-sm font-medium">Help</span>}
+          </Link>
+          <Link
+            to="/profile"
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              location.pathname === '/profile'
+                ? 'bg-zinc-800 text-zinc-100'
+                : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
+            }`}
+          >
+            <Settings className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="text-sm font-medium">Settings</span>}
+          </Link>
+        </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
@@ -104,6 +144,8 @@ export function Layout({ children }: LayoutProps) {
             {location.pathname.startsWith('/streams/') && 'Stream Details'}
             {location.pathname === '/logs' && 'Logs'}
             {location.pathname === '/profile' && 'Profile'}
+            {location.pathname === '/docs' && 'Docs'}
+            {location.pathname === '/help' && 'Help'}
           </div>
 
           <div className="flex items-center gap-4">

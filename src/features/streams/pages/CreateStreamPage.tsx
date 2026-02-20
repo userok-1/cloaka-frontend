@@ -31,7 +31,7 @@ export function CreateStreamPage() {
 
   return (
     <Layout>
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         <button
           onClick={() => navigate('/streams')}
           className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors"

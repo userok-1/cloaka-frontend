@@ -9,6 +9,8 @@ import { CreateStreamPage } from '../features/streams/pages/CreateStreamPage';
 import { StreamDetailPage } from '../features/streams/pages/StreamDetailPage';
 import { TrashPage } from '../features/streams/pages/TrashPage';
 import { LogsPage } from '../features/logs/pages/LogsPage';
+import { DocsPage } from '../features/docs/pages/DocsPage';
+import { HelpPage } from '../features/help/pages/HelpPage';
 import { AccessDeniedPage } from '../shared/pages/AccessDeniedPage';
 import { NotFoundPage } from '../shared/pages/NotFoundPage';
 import { AuthGuard } from '../shared/guards/AuthGuard';
@@ -91,6 +93,22 @@ export function Router() {
             element={
               <AuthGuard>
                 <ProfilePage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/docs"
+            element={
+              <AuthGuard>
+                <DocsPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/help"
+            element={
+              <AuthGuard>
+                <HelpPage />
               </AuthGuard>
             }
           />
