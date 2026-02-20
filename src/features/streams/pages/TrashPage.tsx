@@ -88,7 +88,7 @@ export function TrashPage() {
               >
                 Streams
                 {activeTab === 'streams' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                 )}
               </button>
               {isAdmin && (
@@ -102,7 +102,7 @@ export function TrashPage() {
                 >
                   Users
                   {activeTab === 'users' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                   )}
                 </button>
               )}

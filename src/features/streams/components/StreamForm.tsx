@@ -169,7 +169,7 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-zinc-200">Mode</label>
         <select
-          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
           {...register('mode')}
         >
           <option value="redirect">Redirect</option>
@@ -189,7 +189,7 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             <label key={key} className="flex items-center gap-3">
               <input
                 type="checkbox"
-                className="w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-violet-600 focus:ring-violet-500"
+                className="w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-brand-600 focus:ring-brand-500"
                 {...register(`detectorsOptions.${key}` as const)}
               />
               <span className="text-sm text-zinc-300">{label}</span>

@@ -34,7 +34,7 @@ export function LogsPage() {
               >
                 Filter Logs
                 {activeTab === 'filter' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                 )}
               </button>
               {isAdmin && (
@@ -48,7 +48,7 @@ export function LogsPage() {
                 >
                   Error Logs
                   {activeTab === 'errors' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                   )}
                 </button>
               )}

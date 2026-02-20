@@ -23,6 +23,13 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        brand: {
+          300: '#b0e0e2',
+          400: '#92d4d6',
+          500: '#6bc4c6',
+          600: '#4eb5b8',
+          700: '#3a9a9d',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

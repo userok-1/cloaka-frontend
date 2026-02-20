@@ -49,7 +49,7 @@ function ConfirmDialog({
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 variant === 'destructive'
                   ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-violet-600 hover:bg-violet-700 text-white'
+                  : 'bg-brand-600 hover:bg-brand-700 text-white'
               }`}
             >
               {confirmText}

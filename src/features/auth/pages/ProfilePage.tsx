@@ -56,7 +56,7 @@ export function ProfilePage() {
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
                       user.role === 'admin'
-                        ? 'bg-violet-500/20 text-violet-400'
+                        ? 'bg-brand-500/20 text-brand-400'
                         : 'bg-zinc-800 text-zinc-300'
                     }`}
                   >

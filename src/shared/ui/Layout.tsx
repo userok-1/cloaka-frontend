@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store';
 import { authApi } from '../../features/auth/api';
+import logoImg from '../../img/cloaka.png';
 import { toast } from './toast';
 
 interface LayoutProps {
@@ -55,9 +56,9 @@ export function Layout({ children }: LayoutProps) {
           {!collapsed && (
             <button
               onClick={() => navigate('/')}
-              className="text-xl font-semibold text-zinc-100 hover:text-zinc-200 transition-colors"
+              className="hover:opacity-80 transition-opacity"
             >
-              cloaka
+              <img src={logoImg} alt="cloaka" className="h-8" />
             </button>
           )}
           <button

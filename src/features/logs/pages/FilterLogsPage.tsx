@@ -95,7 +95,7 @@ export function FilterLogsPage() {
             <select
               value={streamIds ?? ''}
               onChange={(e) => handleStreamFilter(e.target.value)}
-              className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">All streams</option>
               {streams.map((s) => (
@@ -169,7 +169,7 @@ export function FilterLogsPage() {
                         {(log.metadata !== undefined && log.metadata !== null) && (
                           <button
                             onClick={() => setMetadataModal(log)}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-violet-400 hover:text-violet-300 hover:bg-zinc-800 rounded transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-brand-400 hover:text-brand-300 hover:bg-zinc-800 rounded transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             View

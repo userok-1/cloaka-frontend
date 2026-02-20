@@ -8,6 +8,7 @@ import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
 import { toast } from '../../../shared/ui/toast';
 import { useState } from 'react';
+import logoImg from '../../../img/cloaka.png';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export function RegisterPage() {
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-zinc-100 mb-2">cloaka</h1>
+          <img src={logoImg} alt="cloaka" className="h-auto mx-auto mb-4" />
           <p className="text-zinc-400">Create your account</p>
         </div>
 
@@ -78,7 +79,7 @@ export function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-zinc-400">
               Already have an account?{' '}
-              <Link to="/login" className="text-violet-400 hover:text-violet-300">
+              <Link to="/login" className="text-brand-400 hover:text-brand-300">
                 Sign in
               </Link>
             </p>
