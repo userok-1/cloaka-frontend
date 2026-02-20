@@ -50,12 +50,10 @@ export async function apiRequest<TResponse = void, TBody = unknown>(
     });
 
     if (response.status === 401) {
-      window.location.href = '/login';
       throw new ApiError(401, 'Unauthorized');
     }
 
     if (response.status === 403) {
-      window.location.href = '/access-denied';
       throw new ApiError(403, 'Access denied');
     }
 
