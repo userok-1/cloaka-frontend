@@ -205,13 +205,89 @@ export function FilterLogsTable() {
 
       <Modal
         isOpen={!!metadataModal}
-        title="Log metadata"
+        title="Log Details"
         onClose={() => setMetadataModal(null)}
       >
         {metadataModal && (
-          <pre className="text-sm text-zinc-300 overflow-auto max-h-[70vh] p-2 bg-zinc-950 rounded border border-zinc-800">
-            {JSON.stringify(metadataModal.metadata, null, 2)}
-          </pre>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">Time</h3>
+                <p className="text-sm text-zinc-200">
+                  {new Date(metadataModal.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">Stream</h3>
+                <p className="text-sm text-zinc-200">
+                  {streamNameMap[metadataModal.streamId] ?? `Stream #${metadataModal.streamId}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">Status</h3>
+                <span
+                  className={
+                    metadataModal.passed
+                      ? 'px-2 py-1 bg-emerald-900/50 text-emerald-400 text-xs rounded'
+                      : 'px-2 py-1 bg-red-900/50 text-red-400 text-xs rounded'
+                  }
+                >
+                  {metadataModal.passed ? 'Allowed' : 'Blocked'}
+                </span>
+              </div>
+              {metadataModal.reason && (
+                <div>
+                  <h3 className="text-sm font-medium text-zinc-400 mb-1">Reason</h3>
+                  <p className="text-sm text-zinc-200">{metadataModal.reason}</p>
+                </div>
+              )}
+            </div>
+
+            {metadataModal.metadata && typeof metadataModal.metadata === 'object' && (
+              <>
+                {(metadataModal.metadata as Record<string, unknown>).ip && (
+                  <div>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1">IP Address</h3>
+                    <p className="text-sm text-zinc-200 font-mono">
+                      {String((metadataModal.metadata as Record<string, unknown>).ip)}
+                    </p>
+                  </div>
+                )}
+
+                {(metadataModal.metadata as Record<string, unknown>).userAgent && (
+                  <div>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1">User Agent</h3>
+                    <p className="text-sm text-zinc-200 break-all">
+                      {String((metadataModal.metadata as Record<string, unknown>).userAgent)}
+                    </p>
+                  </div>
+                )}
+
+                {(metadataModal.metadata as Record<string, unknown>).country && (
+                  <div>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1">Country</h3>
+                    <p className="text-sm text-zinc-200">
+                      {String((metadataModal.metadata as Record<string, unknown>).country)}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {metadataModal.metadata !== null && metadataModal.metadata !== undefined && (
+              <div>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">Full Metadata</h3>
+                <pre className="text-xs text-zinc-300 overflow-auto max-h-64 p-3 bg-zinc-950 rounded border border-zinc-800">
+                  {typeof metadataModal.metadata === 'object'
+                    ? JSON.stringify(metadataModal.metadata, null, 2)
+                    : String(metadataModal.metadata)}
+                </pre>
+              </div>
+            )}
+          </div>
         )}
       </Modal>
     </div>
