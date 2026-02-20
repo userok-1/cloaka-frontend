@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Eye, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
@@ -12,6 +13,7 @@ import { Stream } from '../../../shared/lib/zod-schemas';
 import { useState } from 'react';
 
 export function StreamsListPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,15 +29,15 @@ export function StreamsListPage() {
     mutationFn: streamsApi.trash,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['streams'] });
-      toast.success('Stream moved to trash');
+      toast.success(t('streams.movedToTrash'));
     },
   });
 
   const handleTrash = async (stream: Stream) => {
     const confirmed = await confirmDialog({
-      title: 'Move to trash',
-      description: `Are you sure you want to move "${stream.name}" to trash? You can restore it later.`,
-      confirmText: 'Move to trash',
+      title: t('streams.moveToTrash'),
+      description: t('streams.moveToTrashConfirm', { name: stream.name }),
+      confirmText: t('streams.moveToTrash'),
       variant: 'default',
     });
 
@@ -48,7 +50,7 @@ export function StreamsListPage() {
     const base = import.meta.env.VITE_API_BASE_URL ?? '/api';
     const url = `${base.replace(/\/$/, '')}/r/${streamId}`;
     navigator.clipboard.writeText(url);
-    toast.success('URL copied to clipboard');
+    toast.success(t('streams.urlCopied'));
   };
 
   const handlePageChange = (newPage: number) => {
@@ -73,18 +75,18 @@ export function StreamsListPage() {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-100">Streams</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('streams.title')}</h1>
           <Link to="/streams/new">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create Stream
+              {t('streams.createStream')}
             </Button>
           </Link>
         </div>
 
         <input
           type="text"
-          placeholder="Search streams..."
+          placeholder={t('streams.searchStreams')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -93,11 +95,11 @@ export function StreamsListPage() {
         {filteredStreams.length === 0 ? (
           <EmptyState
             icon={Plus}
-            title="No streams yet"
-            description="Create your first stream to start filtering traffic"
+            title={t('streams.noStreams')}
+            description={t('streams.noStreamsDesc')}
             action={
               <Link to="/streams/new">
-                <Button>Create Stream</Button>
+                <Button>{t('streams.createStream')}</Button>
               </Link>
             }
           />
@@ -106,13 +108,13 @@ export function StreamsListPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">Name</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">Mode</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">{t('common.name')}</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">{t('common.mode')}</th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                    Offer URL
+                    {t('streams.offerUrl')}
                   </th>
                   <th className="text-right px-6 py-3 text-sm font-medium text-zinc-400">
-                    Actions
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -141,7 +143,7 @@ export function StreamsListPage() {
                         <button
                           onClick={() => handleCopyUrl(stream.id)}
                           className="p-2 hover:bg-zinc-700 rounded-lg transition-colors"
-                          title="Copy redirect URL"
+                          title={t('streams.copyRedirectUrl')}
                         >
                           <Copy className="w-4 h-4 text-zinc-400" />
                         </button>
@@ -169,7 +171,7 @@ export function StreamsListPage() {
         {filteredStreams.length > 0 && (
           <div className="flex items-center justify-between pt-4">
             <div className="text-sm text-zinc-400">
-              Page <span className="font-medium text-zinc-100">{page}</span>
+              {t('common.page')} <span className="font-medium text-zinc-100">{page}</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -177,14 +179,14 @@ export function StreamsListPage() {
                 disabled={page === 1}
                 className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft className="w-4 h-4" /> Prev
+                <ChevronLeft className="w-4 h-4" /> {t('common.prev')}
               </button>
               <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={!canNextPage}
                 className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Next <ChevronRight className="w-4 h-4" />
+                {t('common.next')} <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>

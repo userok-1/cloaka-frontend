@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Home,
   LayoutDashboard,
@@ -18,12 +19,14 @@ import { useAuthStore } from '../../features/auth/store';
 import { authApi } from '../../features/auth/api';
 import logoImg from '../../img/cloaka.png';
 import { toast } from './toast';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved === 'true';
@@ -44,21 +47,33 @@ export function Layout({ children }: LayoutProps) {
     try {
       await authApi.logout();
       clearUser();
-      toast.success('Logged out successfully');
+      toast.success(t('auth.logoutSuccess'));
       navigate('/login');
     } catch {
-      toast.error('Logout failed');
+      toast.error(t('auth.logoutFailed'));
     }
   };
 
-  const navItems: { path: string; label: string; icon: typeof Home; adminOnly?: boolean }[] = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/users', label: 'Users', icon: Users, adminOnly: true },
-    { path: '/streams', label: 'Streams', icon: LayoutDashboard },
-    { path: '/logs', label: 'Logs', icon: FileText },
-    { path: '/streams/trash', label: 'Trash', icon: Trash2 },
-    { path: '/docs', label: 'Docs', icon: BookOpen },
+  const navItems: { path: string; labelKey: string; icon: typeof Home; adminOnly?: boolean }[] = [
+    { path: '/', labelKey: 'nav.home', icon: Home },
+    { path: '/users', labelKey: 'nav.users', icon: Users, adminOnly: true },
+    { path: '/streams', labelKey: 'nav.streams', icon: LayoutDashboard },
+    { path: '/logs', labelKey: 'nav.logs', icon: FileText },
+    { path: '/streams/trash', labelKey: 'nav.trash', icon: Trash2 },
+    { path: '/docs', labelKey: 'nav.docs', icon: BookOpen },
   ].filter((item) => !item.adminOnly || user?.role === 'admin');
+
+  const getPageTitle = () => {
+    if (location.pathname === '/') return t('nav.dashboard');
+    if (location.pathname === '/users') return t('nav.users');
+    if (location.pathname === '/streams') return t('nav.streams');
+    if (location.pathname.startsWith('/streams/')) return t('nav.streamDetails');
+    if (location.pathname === '/logs') return t('nav.logs');
+    if (location.pathname === '/profile') return t('nav.profile');
+    if (location.pathname === '/docs') return t('nav.docs');
+    if (location.pathname === '/help') return t('nav.help');
+    return '';
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 flex">
@@ -103,7 +118,7 @@ export function Layout({ children }: LayoutProps) {
                 }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                {!collapsed && <span className="text-sm font-medium">{t(item.labelKey)}</span>}
               </Link>
             );
           })}
@@ -119,7 +134,7 @@ export function Layout({ children }: LayoutProps) {
             }`}
           >
             <HelpCircle className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Help</span>}
+            {!collapsed && <span className="text-sm font-medium">{t('nav.help')}</span>}
           </Link>
           <Link
             to="/profile"
@@ -130,23 +145,14 @@ export function Layout({ children }: LayoutProps) {
             }`}
           >
             <Settings className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Settings</span>}
+            {!collapsed && <span className="text-sm font-medium">{t('nav.settings')}</span>}
           </Link>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
         <header className="h-16 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6">
-          <div className="text-sm text-zinc-400">
-            {location.pathname === '/' && 'Dashboard'}
-            {location.pathname === '/users' && 'Users'}
-            {location.pathname === '/streams' && 'Streams'}
-            {location.pathname.startsWith('/streams/') && 'Stream Details'}
-            {location.pathname === '/logs' && 'Logs'}
-            {location.pathname === '/profile' && 'Profile'}
-            {location.pathname === '/docs' && 'Docs'}
-            {location.pathname === '/help' && 'Help'}
-          </div>
+          <div className="text-sm text-zinc-400">{getPageTitle()}</div>
 
           <div className="flex items-center gap-4">
             <Link
@@ -159,10 +165,11 @@ export function Layout({ children }: LayoutProps) {
                 <div className="text-zinc-500 text-xs capitalize">{user?.role}</div>
               </div>
             </Link>
+            <LanguageSwitcher />
             <button
               onClick={handleLogout}
               className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-              title="Logout"
+              title={t('nav.logout')}
             >
               <LogOut className="w-4 h-4 text-zinc-400" />
             </button>

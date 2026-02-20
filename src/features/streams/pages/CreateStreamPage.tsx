@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
@@ -9,13 +10,14 @@ import { CreateStreamDto } from '../../../shared/lib/zod-schemas';
 import { toast } from '../../../shared/ui/toast';
 
 export function CreateStreamPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: streamsApi.create,
     onSuccess: () => {
-      toast.success('Stream created successfully');
+      toast.success(t('streams.streamCreated'));
       navigate('/streams');
     },
   });
@@ -37,16 +39,16 @@ export function CreateStreamPage() {
           className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to streams
+          {t('streams.backToStreams')}
         </button>
 
-        <h1 className="text-2xl font-semibold text-zinc-100">Create Stream</h1>
+        <h1 className="text-2xl font-semibold text-zinc-100">{t('streams.createStream')}</h1>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
           <StreamForm
             onSubmit={handleSubmit}
             isLoading={isLoading}
-            submitLabel="Create Stream"
+            submitLabel={t('streams.createStream')}
           />
         </div>
       </div>

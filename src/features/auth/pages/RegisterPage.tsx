@@ -1,28 +1,34 @@
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { UserRegisterDto, UserRegisterDtoSchema } from '../../../shared/lib/zod-schemas';
+import { useTranslation } from 'react-i18next';
+import { UserRegisterDto } from '../../../shared/lib/zod-schemas';
+import { createRegisterSchema } from '../../../shared/lib/validation-schemas';
 import { authApi } from '../api';
 import { useAuthStore } from '../store';
 import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
 import { toast } from '../../../shared/ui/toast';
-import { useState } from 'react';
+import { LanguageSwitcher } from '../../../shared/ui/LanguageSwitcher';
 import logoImg from '../../../img/cloaka.png';
 
 export function RegisterPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const schema = useMemo(() => createRegisterSchema(t), [t, i18n.language]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<UserRegisterDto>({
-    resolver: zodResolver(UserRegisterDtoSchema),
+    resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: UserRegisterDto) => {
@@ -30,10 +36,10 @@ export function RegisterPage() {
     try {
       const user = await authApi.register(data);
       setUser(user);
-      toast.success('Account created successfully');
+      toast.success(t('auth.registerSuccess'));
       navigate('/streams');
     } catch {
-      toast.error('Registration failed');
+      toast.error(t('auth.registerFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -41,24 +47,27 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src={logoImg} alt="cloaka" className="h-auto mx-auto mb-4" />
-          <p className="text-zinc-400">Create your account</p>
+          <p className="text-zinc-400">{t('auth.createAccount')}</p>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Input
-              label="Name"
+              label={t('common.name')}
               type="text"
-              placeholder="Your name"
+              placeholder={t('auth.yourName')}
               error={errors.name?.message}
               {...register('name')}
             />
 
             <Input
-              label="Email"
+              label={t('common.email')}
               type="email"
               placeholder="you@example.com"
               error={errors.email?.message}
@@ -66,9 +75,9 @@ export function RegisterPage() {
             />
 
             <Input
-              label="Password"
+              label={t('common.password')}
               type={showPassword ? 'text' : 'password'}
-              placeholder="At least 8 characters with letter and digit"
+              placeholder={t('auth.passwordHint')}
               error={errors.password?.message}
               rightElement={
                 <button
@@ -83,15 +92,15 @@ export function RegisterPage() {
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isLoading ? t('auth.creatingAccount') : t('auth.signUp')}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-zinc-400">
-              Already have an account?{' '}
+              {t('auth.hasAccount')}{' '}
               <Link to="/login" className="text-brand-400 hover:text-brand-300">
-                Sign in
+                {t('auth.signIn')}
               </Link>
             </p>
           </div>

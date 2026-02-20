@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
@@ -10,6 +11,7 @@ import { CreateStreamDto } from '../../../shared/lib/zod-schemas';
 import { toast } from '../../../shared/ui/toast';
 
 export function StreamDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -24,7 +26,7 @@ export function StreamDetailPage() {
     mutationFn: (data: CreateStreamDto) => streamsApi.update(Number(id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['streams'] });
-      toast.success('Stream updated successfully');
+      toast.success(t('streams.streamUpdated'));
       navigate('/streams');
     },
   });
@@ -50,7 +52,7 @@ export function StreamDetailPage() {
     return (
       <Layout>
         <div className="text-center py-12">
-          <p className="text-zinc-400">Stream not found</p>
+          <p className="text-zinc-400">{t('streams.streamNotFound')}</p>
         </div>
       </Layout>
     );
@@ -64,17 +66,17 @@ export function StreamDetailPage() {
           className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to streams
+          {t('streams.backToStreams')}
         </button>
 
-        <h1 className="text-2xl font-semibold text-zinc-100">Edit Stream</h1>
+        <h1 className="text-2xl font-semibold text-zinc-100">{t('streams.editStream')}</h1>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
           <StreamForm
             defaultValues={stream}
             onSubmit={handleSubmit}
             isLoading={isLoading}
-            submitLabel="Update Stream"
+            submitLabel={t('streams.updateStream')}
           />
         </div>
       </div>

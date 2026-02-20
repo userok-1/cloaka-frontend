@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { Layout } from '../../../shared/ui/Layout';
 import { LoadingState } from '../../../shared/ui/LoadingState';
@@ -8,6 +9,7 @@ import { streamsApi } from '../../streams/api';
 import { useAuthStore } from '../../auth/store';
 
 export function HomePage() {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
 
   const { data: streams = [], isLoading: streamsLoading } = useQuery({
@@ -47,58 +49,58 @@ export function HomePage() {
     <Layout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('home.title')}</h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Welcome back, <span className="font-medium text-zinc-200">{user?.email}</span>
+            {t('home.welcomeBack')} <span className="font-medium text-zinc-200">{user?.email}</span>
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-zinc-400">Total Visits</p>
+              <p className="text-sm font-medium text-zinc-400">{t('home.totalVisits')}</p>
               <Activity className="w-4 h-4 text-zinc-500" />
             </div>
             <div className="text-3xl font-semibold text-zinc-100">{stats.total}</div>
-            <p className="text-xs text-zinc-500">Across all streams</p>
+            <p className="text-xs text-zinc-500">{t('home.acrossAllStreams')}</p>
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-zinc-400">Allowed</p>
+              <p className="text-sm font-medium text-zinc-400">{t('home.allowed')}</p>
               <TrendingUp className="w-4 h-4 text-emerald-500" />
             </div>
             <div className="text-3xl font-semibold text-zinc-100">{stats.allowed}</div>
-            <p className="text-xs text-emerald-600">Legitimate traffic</p>
+            <p className="text-xs text-emerald-600">{t('home.legitimateTraffic')}</p>
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-zinc-400">Blocked</p>
+              <p className="text-sm font-medium text-zinc-400">{t('home.blocked')}</p>
               <TrendingDown className="w-4 h-4 text-red-500" />
             </div>
             <div className="text-3xl font-semibold text-zinc-100">{stats.blocked}</div>
-            <p className="text-xs text-red-600">Suspicious activity</p>
+            <p className="text-xs text-red-600">{t('home.suspiciousActivity')}</p>
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-zinc-400">Pass Rate</p>
+              <p className="text-sm font-medium text-zinc-400">{t('home.passRate')}</p>
               <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-100">
-                {passRate}%
+                %
               </div>
             </div>
             <div className="text-3xl font-semibold text-zinc-100">{passRate}%</div>
-            <p className="text-xs text-zinc-500">Allowed vs total</p>
+            <p className="text-xs text-zinc-500">{t('home.allowedVsTotal')}</p>
           </div>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">Active Streams</h2>
+          <h2 className="text-lg font-semibold text-zinc-100 mb-4">{t('home.activeStreams')}</h2>
           {streams.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-zinc-400">No active streams yet</p>
-              <p className="text-sm text-zinc-500 mt-1">Create your first stream to get started</p>
+              <p className="text-zinc-400">{t('home.noActiveStreams')}</p>
+              <p className="text-sm text-zinc-500 mt-1">{t('home.createFirstStream')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -120,7 +122,7 @@ export function HomePage() {
               ))}
               {streams.length > 5 && (
                 <p className="text-xs text-zinc-500 pt-2">
-                  and {streams.length - 5} more...
+                  {t('home.andMore', { count: streams.length - 5 })}
                 </p>
               )}
             </div>

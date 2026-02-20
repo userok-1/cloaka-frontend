@@ -1,76 +1,78 @@
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../../../shared/ui/Layout';
 
 export function DocsPage() {
+  const { t } = useTranslation();
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-zinc-100">Documentation</h1>
+        <h1 className="text-3xl font-bold text-zinc-100">{t('docs.title')}</h1>
 
         <section className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-zinc-100">About Cloaka</h2>
+          <h2 className="text-xl font-semibold text-zinc-100">{t('docs.aboutTitle')}</h2>
           <p className="text-zinc-400 leading-relaxed">
-            Cloaka is a traffic management and cloaking system designed for affiliate marketers. 
-            It helps you filter traffic, detect bots, and route visitors based on various conditions.
+            {t('docs.aboutDesc')}
           </p>
         </section>
 
         <section className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-zinc-100">Key Features</h2>
+          <h2 className="text-xl font-semibold text-zinc-100">{t('docs.keyFeatures')}</h2>
           <ul className="space-y-3 text-zinc-400">
             <li className="flex items-start gap-3">
               <span className="text-brand-400 mt-1">•</span>
               <div>
-                <strong className="text-zinc-200">Stream Management</strong> - Create and manage traffic streams with custom rules and filters.
+                <strong className="text-zinc-200">{t('docs.featureStreams')}</strong> - {t('docs.featureStreamsDesc')}
               </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-brand-400 mt-1">•</span>
               <div>
-                <strong className="text-zinc-200">Bot Detection</strong> - Identify and filter bot traffic using fingerprinting and user agent analysis.
+                <strong className="text-zinc-200">{t('docs.featureBotDetection')}</strong> - {t('docs.featureBotDetectionDesc')}
               </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-brand-400 mt-1">•</span>
               <div>
-                <strong className="text-zinc-200">Geo Filtering</strong> - Allow or block traffic based on geographic location.
+                <strong className="text-zinc-200">{t('docs.featureGeo')}</strong> - {t('docs.featureGeoDesc')}
               </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-brand-400 mt-1">•</span>
               <div>
-                <strong className="text-zinc-200">VPN/Proxy Detection</strong> - Detect visitors using VPNs or proxies.
+                <strong className="text-zinc-200">{t('docs.featureVpn')}</strong> - {t('docs.featureVpnDesc')}
               </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-brand-400 mt-1">•</span>
               <div>
-                <strong className="text-zinc-200">Real-time Logs</strong> - Monitor all traffic with detailed logging and analytics.
+                <strong className="text-zinc-200">{t('docs.featureLogs')}</strong> - {t('docs.featureLogsDesc')}
               </div>
             </li>
           </ul>
         </section>
 
         <section className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-zinc-100">Stream Modes</h2>
+          <h2 className="text-xl font-semibold text-zinc-100">{t('docs.streamModes')}</h2>
           <div className="space-y-3 text-zinc-400">
             <div>
-              <strong className="text-zinc-200">Redirect Mode</strong> - Redirects allowed traffic to the offer URL and blocked traffic to the white URL.
+              <strong className="text-zinc-200">{t('docs.redirectMode')}</strong> - {t('docs.redirectModeDesc')}
             </div>
             <div>
-              <strong className="text-zinc-200">Fingerprint Mode</strong> - Uses JavaScript fingerprinting for advanced bot detection before routing.
+              <strong className="text-zinc-200">{t('docs.fingerprintMode')}</strong> - {t('docs.fingerprintModeDesc')}
             </div>
           </div>
         </section>
 
         <section className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-zinc-100">Getting Started</h2>
+          <h2 className="text-xl font-semibold text-zinc-100">{t('docs.gettingStarted')}</h2>
           <ol className="space-y-3 text-zinc-400 list-decimal list-inside">
-            <li>Create a new stream in the Streams section</li>
-            <li>Configure your offer URL (where allowed traffic goes)</li>
-            <li>Set up your white URL (safe page for blocked traffic)</li>
-            <li>Choose detection options (User Agent, Fingerprint, VPN, etc.)</li>
-            <li>Optionally set geo restrictions</li>
-            <li>Use the generated stream URL in your campaigns</li>
+            <li>{t('docs.step1')}</li>
+            <li>{t('docs.step2')}</li>
+            <li>{t('docs.step3')}</li>
+            <li>{t('docs.step4')}</li>
+            <li>{t('docs.step5')}</li>
+            <li>{t('docs.step6')}</li>
           </ol>
         </section>
       </div>

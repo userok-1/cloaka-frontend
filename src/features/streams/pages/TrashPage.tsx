@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, Trash2, Inbox, Users } from 'lucide-react';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
@@ -13,6 +14,7 @@ import { useAuthStore } from '../../auth/store';
 type TrashTab = 'streams' | 'users';
 
 export function TrashPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
@@ -33,7 +35,7 @@ export function TrashPage() {
     mutationFn: streamsApi.restore,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['streams'] });
-      toast.success('Stream restored successfully');
+      toast.success(t('trash.restored'));
     },
   });
 
@@ -41,15 +43,15 @@ export function TrashPage() {
     mutationFn: streamsApi.deletePermanently,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['streams'] });
-      toast.success('Stream deleted permanently');
+      toast.success(t('trash.deletedPermanently'));
     },
   });
 
   const handleRestore = async (stream: Stream) => {
     const confirmed = await confirmDialog({
-      title: 'Restore stream',
-      description: `Are you sure you want to restore "${stream.name}"?`,
-      confirmText: 'Restore',
+      title: t('trash.restoreStream'),
+      description: t('trash.restoreConfirm', { name: stream.name }),
+      confirmText: t('trash.restore'),
       variant: 'default',
     });
 
@@ -60,9 +62,9 @@ export function TrashPage() {
 
   const handleDelete = async (stream: Stream) => {
     const confirmed = await confirmDialog({
-      title: 'Delete permanently',
-      description: `Are you sure you want to permanently delete "${stream.name}"? This action cannot be undone.`,
-      confirmText: 'Delete permanently',
+      title: t('trash.deletePermanently'),
+      description: t('trash.deletePermanentlyConfirm', { name: stream.name }),
+      confirmText: t('trash.deletePermanently'),
       variant: 'destructive',
     });
 
@@ -75,7 +77,7 @@ export function TrashPage() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-100 mb-6">Trash</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100 mb-6">{t('trash.title')}</h1>
           <div className="border-b border-zinc-800">
             <div className="flex gap-8">
               <button
@@ -86,7 +88,7 @@ export function TrashPage() {
                     : 'text-zinc-400 hover:text-zinc-300'
                 }`}
               >
-                Streams
+                {t('trash.streams')}
                 {activeTab === 'streams' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                 )}
@@ -100,7 +102,7 @@ export function TrashPage() {
                       : 'text-zinc-400 hover:text-zinc-300'
                   }`}
                 >
-                  Users
+                  {t('trash.users')}
                   {activeTab === 'users' && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                   )}
@@ -117,21 +119,21 @@ export function TrashPage() {
             ) : streams.length === 0 ? (
               <EmptyState
                 icon={Inbox}
-                title="No deleted streams"
-                description="Deleted streams will appear here"
+                title={t('trash.noDeletedStreams')}
+                description={t('trash.noDeletedStreamsDesc')}
               />
             ) : (
               <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-zinc-800">
-                      <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">Name</th>
-                      <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">Mode</th>
+                      <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">{t('common.name')}</th>
+                      <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">{t('common.mode')}</th>
                       <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                        Deleted At
+                        {t('trash.deletedAt')}
                       </th>
                       <th className="text-right px-6 py-3 text-sm font-medium text-zinc-400">
-                        Actions
+                        {t('common.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -162,14 +164,14 @@ export function TrashPage() {
                             <button
                               onClick={() => handleRestore(stream)}
                               className="p-2 hover:bg-zinc-700 rounded-lg transition-colors"
-                              title="Restore"
+                              title={t('trash.restore')}
                             >
                               <RefreshCw className="w-4 h-4 text-zinc-400" />
                             </button>
                             <button
                               onClick={() => handleDelete(stream)}
                               className="p-2 hover:bg-zinc-700 rounded-lg transition-colors"
-                              title="Delete permanently"
+                              title={t('trash.deletePermanently')}
                             >
                               <Trash2 className="w-4 h-4 text-red-400" />
                             </button>
@@ -186,8 +188,8 @@ export function TrashPage() {
           {activeTab === 'users' && isAdmin && (
             <EmptyState
               icon={Users}
-              title="No deleted users"
-              description="Deleted users will appear here when the feature is available"
+              title={t('trash.noDeletedUsers')}
+              description={t('trash.noDeletedUsersDesc')}
             />
           )}
         </div>

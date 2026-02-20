@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Eye, FileText } from 'lucide-react';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { EmptyState } from '../../../shared/ui/EmptyState';
@@ -13,6 +14,7 @@ import type { FilterLog } from '../../../shared/lib/zod-schemas';
 const LIMIT = 50;
 
 export function FilterLogsTable() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [metadataModal, setMetadataModal] = useState<FilterLog | null>(null);
 
@@ -84,14 +86,14 @@ export function FilterLogsTable() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-xl font-semibold text-zinc-100">Filter Logs</h2>
+        <h2 className="text-xl font-semibold text-zinc-100">{t('logs.filterLogs')}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={streamIds ?? ''}
             onChange={(e) => handleStreamFilter(e.target.value)}
             className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
-            <option value="">All streams</option>
+            <option value="">{t('logs.allStreams')}</option>
             {streams.map((s) => (
               <option key={s.id} value={String(s.id)}>
                 {s.name}
@@ -99,7 +101,7 @@ export function FilterLogsTable() {
             ))}
           </select>
           <Button variant="secondary" onClick={handleSortToggle}>
-            Sort: {sort === 'desc' ? 'Newest first' : 'Oldest first'}
+            {t('logs.sort')}: {sort === 'desc' ? t('logs.sortNewest') : t('logs.sortOldest')}
           </Button>
         </div>
       </div>
@@ -107,8 +109,8 @@ export function FilterLogsTable() {
       {logs.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title="No filter logs yet"
-          description="Logs will appear here when traffic passes through your streams"
+          title={t('logs.noFilterLogs')}
+          description={t('logs.noFilterLogsDesc')}
         />
       ) : (
         <>
@@ -117,19 +119,19 @@ export function FilterLogsTable() {
               <thead>
                 <tr className="border-b border-zinc-800">
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                    Time
+                    {t('common.time')}
                   </th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                    Stream
+                    {t('logs.stream')}
                   </th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                    Status
+                    {t('common.status')}
                   </th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                    Reason
+                    {t('common.reason')}
                   </th>
                   <th className="text-right px-6 py-3 text-sm font-medium text-zinc-400">
-                    Actions
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -153,7 +155,7 @@ export function FilterLogsTable() {
                             : 'px-2 py-1 bg-red-900/50 text-red-400 text-xs rounded'
                         }
                       >
-                        {log.passed ? 'Allowed' : 'Blocked'}
+                        {log.passed ? t('logs.passed') : t('logs.blocked')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-400 max-w-xs truncate">
@@ -166,7 +168,7 @@ export function FilterLogsTable() {
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs text-brand-400 hover:text-brand-300 hover:bg-zinc-800 rounded transition-colors"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          View
+                          {t('common.view')}
                         </button>
                       )}
                     </td>
@@ -178,8 +180,8 @@ export function FilterLogsTable() {
 
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">
-              Page {page}
-              {data?.total != null && ` of ${Math.ceil(data.total / LIMIT)}`}
+              {t('common.page')} {page}
+              {data?.total != null && ` ${t('common.of')} ${Math.ceil(data.total / LIMIT)}`}
             </p>
             <div className="flex gap-2">
               <Button
@@ -188,14 +190,14 @@ export function FilterLogsTable() {
                 disabled={page <= 1}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                Prev
+                {t('common.prev')}
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => handlePageChange(page + 1)}
                 disabled={!canNextPage}
               >
-                Next
+                {t('common.next')}
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -205,20 +207,20 @@ export function FilterLogsTable() {
 
       <Modal
         isOpen={!!metadataModal}
-        title="Log Details"
+        title={t('logs.logDetails')}
         onClose={() => setMetadataModal(null)}
       >
         {metadataModal && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-1">Time</h3>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('common.time')}</h3>
                 <p className="text-sm text-zinc-200">
                   {new Date(metadataModal.createdAt).toLocaleString()}
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-1">Stream</h3>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.stream')}</h3>
                 <p className="text-sm text-zinc-200">
                   {streamNameMap[metadataModal.streamId] ?? `Stream #${metadataModal.streamId}`}
                 </p>
@@ -227,7 +229,7 @@ export function FilterLogsTable() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-1">Status</h3>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('common.status')}</h3>
                 <span
                   className={
                     metadataModal.passed
@@ -235,12 +237,12 @@ export function FilterLogsTable() {
                       : 'px-2 py-1 bg-red-900/50 text-red-400 text-xs rounded'
                   }
                 >
-                  {metadataModal.passed ? 'Allowed' : 'Blocked'}
+                  {metadataModal.passed ? t('logs.passed') : t('logs.blocked')}
                 </span>
               </div>
               {metadataModal.reason && (
                 <div>
-                  <h3 className="text-sm font-medium text-zinc-400 mb-1">Reason</h3>
+                  <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('common.reason')}</h3>
                   <p className="text-sm text-zinc-200">{metadataModal.reason}</p>
                 </div>
               )}
@@ -250,7 +252,7 @@ export function FilterLogsTable() {
               <>
                 {(metadataModal.metadata as Record<string, unknown>).ip != null && (
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-1">IP Address</h3>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.ipAddress')}</h3>
                     <p className="text-sm text-zinc-200 font-mono">
                       {String((metadataModal.metadata as Record<string, unknown>).ip)}
                     </p>
@@ -259,7 +261,7 @@ export function FilterLogsTable() {
 
                 {(metadataModal.metadata as Record<string, unknown>).userAgent != null && (
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-1">User Agent</h3>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.userAgent')}</h3>
                     <p className="text-sm text-zinc-200 break-all">
                       {String((metadataModal.metadata as Record<string, unknown>).userAgent)}
                     </p>
@@ -268,7 +270,7 @@ export function FilterLogsTable() {
 
                 {(metadataModal.metadata as Record<string, unknown>).country != null && (
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400 mb-1">Country</h3>
+                    <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.country')}</h3>
                     <p className="text-sm text-zinc-200">
                       {String((metadataModal.metadata as Record<string, unknown>).country)}
                     </p>
@@ -279,7 +281,7 @@ export function FilterLogsTable() {
 
             {metadataModal.metadata !== null && metadataModal.metadata !== undefined && (
               <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-1">Full Metadata</h3>
+                <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.fullMetadata')}</h3>
                 <pre className="text-xs text-zinc-300 overflow-auto max-h-64 p-3 bg-zinc-950 rounded border border-zinc-800">
                   {typeof metadataModal.metadata === 'object'
                     ? JSON.stringify(metadataModal.metadata, null, 2)

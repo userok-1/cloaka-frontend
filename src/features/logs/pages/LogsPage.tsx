@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../../../shared/ui/Layout';
 import { FilterLogsTable } from '../components/FilterLogsTable';
 import { ErrorLogsTable } from '../components/ErrorLogsTable';
@@ -7,6 +8,7 @@ import { useAuthStore } from '../../auth/store';
 type TabType = 'filter' | 'errors';
 
 export function LogsPage() {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const [activeTab, setActiveTab] = useState<TabType>('filter');
@@ -21,7 +23,7 @@ export function LogsPage() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-100 mb-6">Logs</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100 mb-6">{t('logs.title')}</h1>
           <div className="border-b border-zinc-800">
             <div className="flex gap-8">
               <button
@@ -32,7 +34,7 @@ export function LogsPage() {
                     : 'text-zinc-400 hover:text-zinc-300'
                 }`}
               >
-                Filter Logs
+                {t('logs.filterLogs')}
                 {activeTab === 'filter' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                 )}
@@ -46,7 +48,7 @@ export function LogsPage() {
                       : 'text-zinc-400 hover:text-zinc-300'
                   }`}
                 >
-                  Error Logs
+                  {t('logs.errorLogs')}
                   {activeTab === 'errors' && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500" />
                   )}
