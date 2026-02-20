@@ -32,8 +32,14 @@
     @apply border-border;
   }
 
+  html,
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-zinc-950 text-foreground;
+    overscroll-behavior: none;
+  }
+
+  body {
+    @apply font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: 'cv11', 'ss01';
     font-optical-sizing: auto;
