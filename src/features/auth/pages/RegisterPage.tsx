@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { UserRegisterDto, UserRegisterDtoSchema } from '../../../shared/lib/zod-schemas';
 import { authApi } from '../api';
 import { useAuthStore } from '../store';
@@ -14,6 +15,7 @@ export function RegisterPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -65,9 +67,18 @@ export function RegisterPage() {
 
             <Input
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="At least 8 characters with letter and digit"
               error={errors.password?.message}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
+                  {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+              }
               {...register('password')}
             />
 

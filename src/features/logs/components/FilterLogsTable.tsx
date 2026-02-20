@@ -246,9 +246,9 @@ export function FilterLogsTable() {
               )}
             </div>
 
-            {metadataModal.metadata && typeof metadataModal.metadata === 'object' && (
+            {metadataModal.metadata != null && typeof metadataModal.metadata === 'object' && (
               <>
-                {(metadataModal.metadata as Record<string, unknown>).ip && (
+                {(metadataModal.metadata as Record<string, unknown>).ip != null && (
                   <div>
                     <h3 className="text-sm font-medium text-zinc-400 mb-1">IP Address</h3>
                     <p className="text-sm text-zinc-200 font-mono">
@@ -257,7 +257,7 @@ export function FilterLogsTable() {
                   </div>
                 )}
 
-                {(metadataModal.metadata as Record<string, unknown>).userAgent && (
+                {(metadataModal.metadata as Record<string, unknown>).userAgent != null && (
                   <div>
                     <h3 className="text-sm font-medium text-zinc-400 mb-1">User Agent</h3>
                     <p className="text-sm text-zinc-200 break-all">
@@ -266,7 +266,7 @@ export function FilterLogsTable() {
                   </div>
                 )}
 
-                {(metadataModal.metadata as Record<string, unknown>).country && (
+                {(metadataModal.metadata as Record<string, unknown>).country != null && (
                   <div>
                     <h3 className="text-sm font-medium text-zinc-400 mb-1">Country</h3>
                     <p className="text-sm text-zinc-200">

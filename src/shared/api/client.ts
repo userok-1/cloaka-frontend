@@ -49,14 +49,6 @@ export async function apiRequest<TResponse = void, TBody = unknown>(
       credentials: 'include',
     });
 
-    if (response.status === 401) {
-      throw new ApiError(401, 'Unauthorized');
-    }
-
-    if (response.status === 403) {
-      throw new ApiError(403, 'Access denied');
-    }
-
     if (response.status === 204) {
       return undefined as TResponse;
     }
