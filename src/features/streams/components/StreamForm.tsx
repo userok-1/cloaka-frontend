@@ -1,4 +1,4 @@
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,7 +10,27 @@ import {
 import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
 import { z } from 'zod';
-import { Plus, X, HelpCircle } from 'lucide-react';
+import { useState } from 'react';
+import { X, HelpCircle } from 'lucide-react';
+
+function isValidIpCidr(value: string): boolean {
+  const s = value.trim().toLowerCase();
+  if (!s) return false;
+  const [ipPart, cidrPart] = s.split('/');
+  if (!ipPart) return false;
+  const octets = ipPart.split('.');
+  if (octets.length !== 4) return false;
+  const octetOk = (o: string) => {
+    const n = parseInt(o, 10);
+    return o !== '' && !isNaN(n) && n >= 0 && n <= 255;
+  };
+  if (!octets.every(octetOk)) return false;
+  if (cidrPart !== undefined) {
+    const n = parseInt(cidrPart, 10);
+    if (cidrPart === '' || isNaN(n) || n < 0 || n > 32) return false;
+  }
+  return true;
+}
 
 const StreamFormSchema = z.object({
   name: z.string().min(2).max(100),
@@ -85,6 +105,173 @@ function normalizeIp(value: string): string {
   return s;
 }
 
+function IpChipField({
+  values,
+  onAdd,
+  onRemove,
+  onReplace,
+  getError,
+  placeholder,
+  duplicateTooltip,
+  removeTitle,
+  maxCount,
+  validateValue,
+}: {
+  values: string[];
+  onAdd: (raw: string) => void;
+  onRemove: (index: number) => void;
+  onReplace: (index: number, newValue: string) => void;
+  getError: (index: number) => string | undefined;
+  placeholder: string;
+  duplicateTooltip: string;
+  removeTitle: string;
+  maxCount: number;
+  validateValue: (raw: string) => boolean;
+}) {
+  const [inputValue, setInputValue] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editInputValue, setEditInputValue] = useState('');
+
+  const commit = (raw: string) => {
+    const parts = raw.split(/[,\n]+/).map((p) => p.trim().toLowerCase()).filter(Boolean);
+    parts.forEach((p) => onAdd(p));
+    setInputValue('');
+  };
+
+  const startEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditInputValue(values[index] ?? '');
+  };
+
+  const commitEdit = () => {
+    if (editingIndex === null) return;
+    const v = editInputValue.trim().toLowerCase();
+    if (!v) {
+      onRemove(editingIndex);
+    } else if (validateValue(v)) {
+      onReplace(editingIndex, v);
+    } else {
+      onReplace(editingIndex, values[editingIndex] ?? '');
+    }
+    setEditingIndex(null);
+  };
+
+  const cancelEdit = () => {
+    if (editingIndex !== null) {
+      onReplace(editingIndex, values[editingIndex] ?? '');
+    }
+    setEditingIndex(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commit(inputValue);
+    }
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text').trim();
+    if (text) {
+      e.preventDefault();
+      commit(text);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (v.includes(',') || v.includes('\n')) {
+      commit(v);
+      return;
+    }
+    setInputValue(v);
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2 p-2 bg-zinc-900 border border-zinc-700 rounded-lg min-h-[42px] transition-colors hover:border-brand-500 focus-within:border-brand-500">
+      {values.map((value, index) => {
+        const err = getError(index);
+        const isEditing = editingIndex === index;
+        if (isEditing) {
+          const inputWidth = Math.max(editInputValue.length, 8);
+          return (
+            <span
+              key={`edit-${index}`}
+              className="inline-flex items-center rounded border border-zinc-600 bg-zinc-800 px-2 py-0.5"
+            >
+              <input
+                type="text"
+                value={editInputValue}
+                onChange={(e) => setEditInputValue(e.target.value)}
+                onKeyDown={handleEditKeyDown}
+                onBlur={commitEdit}
+                autoFocus
+                maxLength={30}
+                style={{ width: `${inputWidth}ch` }}
+                className="min-w-0 bg-transparent py-0.5 text-sm text-zinc-100 focus:outline-none"
+              />
+            </span>
+          );
+        }
+        return (
+          <span
+            key={`${value}-${index}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => startEdit(index)}
+            onKeyDown={(e) => e.key === 'Enter' && startEdit(index)}
+            className={`relative group inline-flex items-center gap-1 px-2 py-1 rounded border text-sm cursor-text ${
+              err ? 'border-red-500 bg-red-950/30 text-zinc-200' : 'border-zinc-600 bg-zinc-800 text-zinc-200'
+            }`}
+          >
+            {value}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(index);
+              }}
+              className="p-0.5 text-zinc-400 hover:text-zinc-100 rounded"
+              title={removeTitle}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            {err && (
+              <span
+                role="tooltip"
+                className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-48 p-2 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded shadow-xl pointer-events-none"
+              >
+                {duplicateTooltip}
+              </span>
+            )}
+          </span>
+        );
+      })}
+      {values.length < maxCount && (
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          placeholder={values.length === 0 ? placeholder : ''}
+          className="flex-1 min-w-[120px] px-2 py-1 bg-transparent border-0 rounded text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-0"
+        />
+      )}
+    </div>
+  );
+}
+
 function useIpDuplicateValidation(
   ipAllow: string[],
   ipDeny: string[],
@@ -132,7 +319,7 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
     handleSubmit,
     formState: { errors },
     watch,
-    control,
+    setValue,
   } = useForm<StreamFormDataWithArrays>({
     resolver: zodResolver(StreamFormSchema) as never,
     defaultValues: {
@@ -142,8 +329,8 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       mode: defaultValues?.mode || 'redirect',
       detectorsOptions: defaultValues?.detectorsOptions || DEFAULT_DETECTORS,
       allowedGeos: defaultValues?.allowedGeos || [],
-      ipAllow: defaultValues?.ipLists?.allow?.length ? defaultValues.ipLists.allow : [''],
-      ipDeny: defaultValues?.ipLists?.deny?.length ? defaultValues.ipLists.deny : [''],
+      ipAllow: defaultValues?.ipLists?.allow ?? [],
+      ipDeny: defaultValues?.ipLists?.deny ?? [],
     },
   });
 
@@ -156,22 +343,42 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
     t('streams.form.ipDuplicateError')
   );
 
-  const {
-    fields: allowFields,
-    append: appendAllow,
-    remove: removeAllow,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useFieldArray({ control, name: 'ipAllow' } as any);
-
-  const {
-    fields: denyFields,
-    append: appendDeny,
-    remove: removeDeny,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useFieldArray({ control, name: 'ipDeny' } as any);
-
-  const addAllowRow = () => (appendAllow as (v: string) => void)('');
-  const addDenyRow = () => (appendDeny as (v: string) => void)('');
+  const setAllow = (arr: string[]) => setValue('ipAllow', arr);
+  const setDeny = (arr: string[]) => setValue('ipDeny', arr);
+  const addIpAllow = (raw: string) => {
+    const v = raw.trim().toLowerCase();
+    if (!v || !isValidIpCidr(v)) return;
+    if ((watch('ipAllow') ?? []).length >= 20) return;
+    setAllow([...(watch('ipAllow') ?? []), v]);
+  };
+  const addIpDeny = (raw: string) => {
+    const v = raw.trim().toLowerCase();
+    if (!v || !isValidIpCidr(v)) return;
+    if ((watch('ipDeny') ?? []).length >= 20) return;
+    setDeny([...(watch('ipDeny') ?? []), v]);
+  };
+  const removeIpAllow = (index: number) => {
+    const arr = (watch('ipAllow') ?? []).slice();
+    arr.splice(index, 1);
+    setAllow(arr);
+  };
+  const removeIpDeny = (index: number) => {
+    const arr = (watch('ipDeny') ?? []).slice();
+    arr.splice(index, 1);
+    setDeny(arr);
+  };
+  const replaceIpAllow = (index: number, newValue: string) => {
+    const arr = (watch('ipAllow') ?? []).slice();
+    arr[index] = newValue;
+    setAllow(arr);
+  };
+  const replaceIpDeny = (index: number, newValue: string) => {
+    const arr = (watch('ipDeny') ?? []).slice();
+    arr[index] = newValue;
+    setDeny(arr);
+  };
+  const clearIpAllow = () => setAllow([]);
+  const clearIpDeny = () => setDeny([]);
 
   const handleFormSubmit = (data: StreamFormDataWithArrays) => {
     const normalizeIpList = (arr: string[] | undefined): string[] | null => {
@@ -218,7 +425,7 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-zinc-200">{t('common.mode')}</label>
         <select
-          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
           {...register('mode')}
         >
           <option value="redirect">Redirect</option>
@@ -238,7 +445,7 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             <label key={key} className="flex items-center gap-3">
               <input
                 type="checkbox"
-                className="w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-brand-600 focus:ring-brand-500"
+                className="w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-brand-600 focus:ring-brand-500 hover:ring-2 hover:ring-brand-500 transition-all"
                 {...register(`detectorsOptions.${key}` as const)}
               />
               <span className="text-sm text-zinc-300">{t(labelKey)}</span>
@@ -298,49 +505,29 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
           {errors.ipAllow?.message && (
             <p className="text-xs text-red-400 mb-2">{errors.ipAllow.message}</p>
           )}
-          <div className="space-y-2">
-            {allowFields.map((field, index) => {
-              const duplicateError = getAllowError(index);
-              return (
-                <div key={field.id} className="relative group">
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      placeholder="192.168.1.1"
-                      className="flex-1"
-                      error={duplicateError}
-                      {...register(`ipAllow.${index}`)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeAllow(index)}
-                      className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
-                      title={t('common.delete')}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {duplicateError && (
-                    <span
-                      role="tooltip"
-                      className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-72 p-3 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl pointer-events-none"
-                    >
-                      {duplicateError}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={addAllowRow}
-              className="gap-2"
-              disabled={allowFields.length >= 20}
-            >
-              <Plus className="w-4 h-4" />
-              {t('streams.form.addIp')}
-            </Button>
-          </div>
+          <IpChipField
+            values={ipAllow}
+            onAdd={addIpAllow}
+            onRemove={removeIpAllow}
+            onReplace={replaceIpAllow}
+            getError={getAllowError}
+            placeholder="192.168.1.1"
+            duplicateTooltip={t('streams.form.ipDuplicateError')}
+            removeTitle={t('common.delete')}
+            maxCount={20}
+            validateValue={isValidIpCidr}
+          />
+          {ipAllow.length >= 1 && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={clearIpAllow}
+                className="px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded border border-zinc-600 hover:border-zinc-500 transition-colors"
+              >
+                {t('common.clearAll')}
+              </button>
+            </div>
+          )}
         </div>
 
         <div>
@@ -364,49 +551,29 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
           {errors.ipDeny?.message && (
             <p className="text-xs text-red-400 mb-2">{errors.ipDeny.message}</p>
           )}
-          <div className="space-y-2">
-            {denyFields.map((field, index) => {
-              const duplicateError = getDenyError(index);
-              return (
-                <div key={field.id} className="relative group">
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      placeholder="192.168.1.1"
-                      className="flex-1"
-                      error={duplicateError}
-                      {...register(`ipDeny.${index}`)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeDeny(index)}
-                      className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
-                      title={t('common.delete')}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {duplicateError && (
-                    <span
-                      role="tooltip"
-                      className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-72 p-3 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl pointer-events-none"
-                    >
-                      {duplicateError}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={addDenyRow}
-              className="gap-2"
-              disabled={denyFields.length >= 20}
-            >
-              <Plus className="w-4 h-4" />
-              {t('streams.form.addIp')}
-            </Button>
-          </div>
+          <IpChipField
+            values={ipDeny}
+            onAdd={addIpDeny}
+            onRemove={removeIpDeny}
+            onReplace={replaceIpDeny}
+            getError={getDenyError}
+            placeholder="192.168.1.1"
+            duplicateTooltip={t('streams.form.ipDuplicateError')}
+            removeTitle={t('common.delete')}
+            maxCount={20}
+            validateValue={isValidIpCidr}
+          />
+          {ipDeny.length >= 1 && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={clearIpDeny}
+                className="px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded border border-zinc-600 hover:border-zinc-500 transition-colors"
+              >
+                {t('common.clearAll')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
