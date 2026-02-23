@@ -1,5 +1,6 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import {
   CreateStreamDto,
   Stream,
@@ -28,8 +29,7 @@ const StreamFormSchema = z.object({
       },
       { message: 'Geo codes must be unique' }
     ),
-  // Match backend StreamIpListsDto: max 20, unique (after trim + lowercase)
-  ipWhitelist: z
+  ipAllow: z
     .array(z.string())
     .max(20, 'Max 20 entries')
     .optional()
@@ -39,10 +39,10 @@ const StreamFormSchema = z.object({
         const normalized = arr.map((s) => s.trim().toLowerCase()).filter(Boolean);
         return new Set(normalized).size === normalized.length;
       },
-      { message: 'IP whitelist entries must be unique' }
+      { message: 'IP allow list entries must be unique' }
     )
     .transform((v) => v ?? []),
-  ipBlacklist: z
+  ipDeny: z
     .array(z.string())
     .max(20, 'Max 20 entries')
     .optional()
@@ -52,15 +52,15 @@ const StreamFormSchema = z.object({
         const normalized = arr.map((s) => s.trim().toLowerCase()).filter(Boolean);
         return new Set(normalized).size === normalized.length;
       },
-      { message: 'IP blacklist entries must be unique' }
+      { message: 'IP deny list entries must be unique' }
     )
     .transform((v) => v ?? []),
 });
 
 type StreamFormData = z.infer<typeof StreamFormSchema>;
-type StreamFormDataWithArrays = Omit<StreamFormData, 'ipWhitelist' | 'ipBlacklist'> & {
-  ipWhitelist: string[];
-  ipBlacklist: string[];
+type StreamFormDataWithArrays = Omit<StreamFormData, 'ipAllow' | 'ipDeny'> & {
+  ipAllow: string[];
+  ipDeny: string[];
 };
 
 interface StreamFormProps {
@@ -78,6 +78,8 @@ const DEFAULT_DETECTORS = {
 };
 
 export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: StreamFormProps) {
+  const { t } = useTranslation();
+
   const {
     register,
     handleSubmit,
@@ -93,38 +95,31 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       mode: defaultValues?.mode || 'redirect',
       detectorsOptions: defaultValues?.detectorsOptions || DEFAULT_DETECTORS,
       allowedGeos: defaultValues?.allowedGeos || [],
-      ipWhitelist:
-        defaultValues?.ipLists?.ipWhitelist?.length ?? defaultValues?.ipWhitelist?.length
-          ? (defaultValues?.ipLists?.ipWhitelist ?? defaultValues?.ipWhitelist ?? [])
-          : [''],
-      ipBlacklist:
-        defaultValues?.ipLists?.ipBlacklist?.length ?? defaultValues?.ipBlacklist?.length
-          ? (defaultValues?.ipLists?.ipBlacklist ?? defaultValues?.ipBlacklist ?? [])
-          : [''],
+      ipAllow: defaultValues?.ipLists?.allow?.length ? defaultValues.ipLists.allow : [''],
+      ipDeny: defaultValues?.ipLists?.deny?.length ? defaultValues.ipLists.deny : [''],
     },
   });
 
   const allowedGeos = watch('allowedGeos') || [];
 
   const {
-    fields: whitelistFields,
-    append: appendWhitelist,
-    remove: removeWhitelist,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- useFieldArray name inference with optional schema fields
-  } = useFieldArray({ control, name: 'ipWhitelist' } as any);
+    fields: allowFields,
+    append: appendAllow,
+    remove: removeAllow,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } = useFieldArray({ control, name: 'ipAllow' } as any);
 
   const {
-    fields: blacklistFields,
-    append: appendBlacklist,
-    remove: removeBlacklist,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- useFieldArray name inference with optional schema fields
-  } = useFieldArray({ control, name: 'ipBlacklist' } as any);
+    fields: denyFields,
+    append: appendDeny,
+    remove: removeDeny,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } = useFieldArray({ control, name: 'ipDeny' } as any);
 
-  const addWhitelistRow = () => (appendWhitelist as (v: string) => void)('');
-  const addBlacklistRow = () => (appendBlacklist as (v: string) => void)('');
+  const addAllowRow = () => (appendAllow as (v: string) => void)('');
+  const addDenyRow = () => (appendDeny as (v: string) => void)('');
 
   const handleFormSubmit = (data: StreamFormDataWithArrays) => {
-    // Normalize like backend StreamIpListsDto: trim, lowercase, filter empty, null if empty
     const normalizeIpList = (arr: string[] | undefined): string[] | null => {
       if (!Array.isArray(arr)) return null;
       const out = arr
@@ -132,12 +127,12 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
         .filter(Boolean);
       return out.length ? out : null;
     };
-    const { ipWhitelist: w, ipBlacklist: b, ...rest } = data;
+    const { ipAllow, ipDeny, ...rest } = data;
     const payload: CreateStreamDto = {
       ...rest,
       ipLists: {
-        ipWhitelist: normalizeIpList(w),
-        ipBlacklist: normalizeIpList(b),
+        allow: normalizeIpList(ipAllow),
+        deny: normalizeIpList(ipDeny),
       },
     };
     return onSubmit(payload);
@@ -146,28 +141,28 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <Input
-        label="Stream Name"
-        placeholder="My Campaign"
+        label={t('streams.form.name')}
+        placeholder={t('streams.form.namePlaceholder')}
         error={errors.name?.message}
         {...register('name')}
       />
 
       <Input
-        label="Offer URL"
+        label={t('streams.form.offerUrl')}
         placeholder="https://example.com/offer"
         error={errors.landingUrl?.message}
         {...register('landingUrl')}
       />
 
       <Input
-        label="White URL"
+        label={t('streams.form.whiteUrl')}
         placeholder="https://example.com/white"
         error={errors.whiteUrl?.message}
         {...register('whiteUrl')}
       />
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-zinc-200">Mode</label>
+        <label className="block text-sm font-medium text-zinc-200">{t('common.mode')}</label>
         <select
           className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
           {...register('mode')}
@@ -178,21 +173,21 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       </div>
 
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-zinc-200">Detector Options</label>
+        <label className="block text-sm font-medium text-zinc-200">{t('streams.form.detectors')}</label>
         <div className="space-y-2">
           {[
-            { key: 'userAgent', label: 'User Agent Detection' },
-            { key: 'screen', label: 'Screen Detection' },
-            { key: 'botsDatabase', label: 'Bots Database' },
-            { key: 'vpnProxy', label: 'VPN/Proxy Detection' },
-          ].map(({ key, label }) => (
+            { key: 'userAgent', labelKey: 'streams.form.detectorUserAgent' },
+            { key: 'screen', labelKey: 'streams.form.detectorScreen' },
+            { key: 'botsDatabase', labelKey: 'streams.form.detectorBots' },
+            { key: 'vpnProxy', labelKey: 'streams.form.detectorVpn' },
+          ].map(({ key, labelKey }) => (
             <label key={key} className="flex items-center gap-3">
               <input
                 type="checkbox"
                 className="w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-brand-600 focus:ring-brand-500"
                 {...register(`detectorsOptions.${key}` as const)}
               />
-              <span className="text-sm text-zinc-300">{label}</span>
+              <span className="text-sm text-zinc-300">{t(labelKey)}</span>
             </label>
           ))}
         </div>
@@ -200,10 +195,10 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-zinc-200">
-          Allowed Geos (ISO-2 codes)
+          {t('streams.form.allowedGeos')}
         </label>
         <Input
-          placeholder="US,GB,CA (comma-separated, uppercase)"
+          placeholder={t('streams.form.allowedGeosPlaceholder')}
           error={errors.allowedGeos?.message}
           {...register('allowedGeos', {
             setValueAs: (v: unknown) => {
@@ -230,27 +225,27 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-zinc-200 mb-2">
-            IP Whitelist
+            {t('streams.form.ipAllow')}
           </label>
           <p className="text-xs text-zinc-500 mb-2">
-            IP or CIDR (e.g. 192.168.1.1 or 10.0.0.0/8). Max 20 entries, unique.
+            {t('streams.form.ipAllowDesc')}
           </p>
-          {errors.ipWhitelist?.message && (
-            <p className="text-xs text-red-400 mb-2">{errors.ipWhitelist.message}</p>
+          {errors.ipAllow?.message && (
+            <p className="text-xs text-red-400 mb-2">{errors.ipAllow.message}</p>
           )}
           <div className="space-y-2">
-            {whitelistFields.map((field, index) => (
+            {allowFields.map((field, index) => (
               <div key={field.id} className="flex gap-2 items-center">
                 <Input
-                  placeholder="e.g. 192.168.1.1 or 10.0.0.0/8"
+                  placeholder="192.168.1.1"
                   className="flex-1"
-                  {...register(`ipWhitelist.${index}`)}
+                  {...register(`ipAllow.${index}`)}
                 />
                 <button
                   type="button"
-                  onClick={() => removeWhitelist(index)}
+                  onClick={() => removeAllow(index)}
                   className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
-                  title="Remove"
+                  title={t('common.delete')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -259,39 +254,39 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             <Button
               type="button"
               variant="secondary"
-              onClick={addWhitelistRow}
+              onClick={addAllowRow}
               className="gap-2"
-              disabled={whitelistFields.length >= 20}
+              disabled={allowFields.length >= 20}
             >
               <Plus className="w-4 h-4" />
-              Add IP or network
+              {t('streams.form.addIp')}
             </Button>
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-zinc-200 mb-2">
-            IP Blacklist
+            {t('streams.form.ipDeny')}
           </label>
           <p className="text-xs text-zinc-500 mb-2">
-            IP or CIDR to block. Max 20 entries, unique.
+            {t('streams.form.ipDenyDesc')}
           </p>
-          {errors.ipBlacklist?.message && (
-            <p className="text-xs text-red-400 mb-2">{errors.ipBlacklist.message}</p>
+          {errors.ipDeny?.message && (
+            <p className="text-xs text-red-400 mb-2">{errors.ipDeny.message}</p>
           )}
           <div className="space-y-2">
-            {blacklistFields.map((field, index) => (
+            {denyFields.map((field, index) => (
               <div key={field.id} className="flex gap-2 items-center">
                 <Input
-                  placeholder="e.g. 192.168.1.1 or 10.0.0.0/8"
+                  placeholder="192.168.1.1"
                   className="flex-1"
-                  {...register(`ipBlacklist.${index}`)}
+                  {...register(`ipDeny.${index}`)}
                 />
                 <button
                   type="button"
-                  onClick={() => removeBlacklist(index)}
+                  onClick={() => removeDeny(index)}
                   className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
-                  title="Remove"
+                  title={t('common.delete')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -300,19 +295,19 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             <Button
               type="button"
               variant="secondary"
-              onClick={addBlacklistRow}
+              onClick={addDenyRow}
               className="gap-2"
-              disabled={blacklistFields.length >= 20}
+              disabled={denyFields.length >= 20}
             >
               <Plus className="w-4 h-4" />
-              Add IP or network
+              {t('streams.form.addIp')}
             </Button>
           </div>
         </div>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? 'Saving...' : submitLabel}
+        {isLoading ? t('common.loading') : submitLabel}
       </Button>
     </form>
   );

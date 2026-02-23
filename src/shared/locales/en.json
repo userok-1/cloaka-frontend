@@ -113,7 +113,25 @@
     "backToStreams": "Back to streams",
     "streamCreated": "Stream created successfully",
     "streamUpdated": "Stream updated successfully",
-    "streamNotFound": "Stream not found"
+    "streamNotFound": "Stream not found",
+    "form": {
+      "name": "Stream Name",
+      "namePlaceholder": "My Campaign",
+      "offerUrl": "Offer URL",
+      "whiteUrl": "White URL",
+      "detectors": "Detector Options",
+      "detectorUserAgent": "User Agent Detection",
+      "detectorScreen": "Screen Detection",
+      "detectorBots": "Bots Database",
+      "detectorVpn": "VPN/Proxy Detection",
+      "allowedGeos": "Allowed Geos (ISO-2 codes)",
+      "allowedGeosPlaceholder": "US,GB,CA (comma-separated, uppercase)",
+      "ipAllow": "IP Allow List (Whitelist)",
+      "ipAllowDesc": "IPs that will always be allowed. Max 20 entries.",
+      "ipDeny": "IP Deny List (Blacklist)",
+      "ipDenyDesc": "IPs that will always be blocked. Max 20 entries.",
+      "addIp": "Add IP"
+    }
   },
   "trash": {
     "title": "Trash",

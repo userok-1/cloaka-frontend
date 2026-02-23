@@ -113,7 +113,25 @@
     "backToStreams": "Назад до потоків",
     "streamCreated": "Потік успішно створено",
     "streamUpdated": "Потік успішно оновлено",
-    "streamNotFound": "Потік не знайдено"
+    "streamNotFound": "Потік не знайдено",
+    "form": {
+      "name": "Назва потоку",
+      "namePlaceholder": "Моя кампанія",
+      "offerUrl": "URL оффера",
+      "whiteUrl": "White URL",
+      "detectors": "Опції детекторів",
+      "detectorUserAgent": "Визначення User Agent",
+      "detectorScreen": "Визначення екрану",
+      "detectorBots": "База даних ботів",
+      "detectorVpn": "Визначення VPN/Proxy",
+      "allowedGeos": "Дозволені країни (ISO-2 коди)",
+      "allowedGeosPlaceholder": "US,GB,CA (через кому, великими)",
+      "ipAllow": "IP дозволені (білий список)",
+      "ipAllowDesc": "IP, які завжди будуть дозволені. Макс. 20 записів.",
+      "ipDeny": "IP заборонені (чорний список)",
+      "ipDenyDesc": "IP, які завжди будуть заблоковані. Макс. 20 записів.",
+      "addIp": "Додати IP"
+    }
   },
   "trash": {
     "title": "Кошик",
