@@ -146,11 +146,11 @@
     "deletedAt": "Видалено",
     "restore": "Відновити",
     "restoreStream": "Відновити потік",
-    "restoreConfirm": "Ви впевнені, що хочете відновити \"{{name}}\"?",
+    "restoreConfirm": "Ви впевнені що хочете відновити \"{{name}}\"?",
     "restored": "Потік успішно відновлено",
     "deletePermanently": "Видалити назавжди",
-    "deletePermanentlyConfirm": "Ви впевнені, що хочете назавжди видалити \"{{name}}\"? Цю дію неможливо скасувати.",
-    "deletedPermanently": "Потік видалено назавжди"
+    "deletePermanentlyConfirm": "Ви впевнені що хочете назавжди видалити \"{{name}}\"? Цю дію неможливо скасувати.",
+    "deletedPermanently": "Потік успішно видалено"
   },
   "logs": {
     "title": "Логи",

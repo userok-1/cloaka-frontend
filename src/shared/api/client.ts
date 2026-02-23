@@ -53,14 +53,16 @@ export async function apiRequest<TResponse = void, TBody = unknown>(
       return undefined as TResponse;
     }
 
-    const data = await response.json();
-
+    const text = await response.text();
     if (!response.ok) {
+      const data = text ? JSON.parse(text) : {};
       const message = data?.message || 'Request failed';
       throw new ApiError(response.status, message, data);
     }
-
-    return data as TResponse;
+    if (!text) {
+      return undefined as TResponse;
+    }
+    return JSON.parse(text) as TResponse;
   } catch (error) {
     if (error instanceof ApiError) {
       if (error.status !== 401 && error.status !== 403) {
