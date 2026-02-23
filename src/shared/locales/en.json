@@ -127,9 +127,9 @@
       "allowedGeos": "Allowed Geos (ISO-2 codes)",
       "allowedGeosPlaceholder": "US,GB,CA (comma-separated, uppercase)",
       "ipAllow": "IP Allow List (Whitelist)",
-      "ipAllowDesc": "IPs that will always be allowed. Max 20 entries.",
+      "ipAllowTooltip": "Visitors from these IPs (or CIDR ranges) will always be allowed to pass the stream, regardless of other checks (geo, VPN, bots). Use for trusted sources, offices, or test IPs.",
       "ipDeny": "IP Deny List (Blacklist)",
-      "ipDenyDesc": "IPs that will always be blocked. Max 20 entries.",
+      "ipDenyTooltip": "Visitors from these IPs (or CIDR ranges) will always be blocked and sent to the white URL. Use to block known bad actors, datacenter IPs, or competitors.",
       "addIp": "Add IP"
     }
   },
@@ -173,7 +173,7 @@
     "level": "Level",
     "message": "Message",
     "context": "Context",
-    "errorDetails": "Error Details"
+    "errorDetails": "Details"
   },
   "users": {
     "title": "Users",

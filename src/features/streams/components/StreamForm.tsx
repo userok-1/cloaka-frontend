@@ -10,7 +10,7 @@ import {
 import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, HelpCircle } from 'lucide-react';
 
 const StreamFormSchema = z.object({
   name: z.string().min(2).max(100),
@@ -224,12 +224,23 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-200 mb-2">
-            {t('streams.form.ipAllow')}
-          </label>
-          <p className="text-xs text-zinc-500 mb-2">
-            {t('streams.form.ipAllowDesc')}
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="text-sm font-medium text-zinc-200">
+              {t('streams.form.ipAllow')}
+            </label>
+            <span className="relative group">
+              <HelpCircle
+                className="w-4 h-4 text-zinc-500 hover:text-zinc-400 cursor-help flex-shrink-0"
+                aria-label={t('streams.form.ipAllowTooltip')}
+              />
+              <span
+                role="tooltip"
+                className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-72 p-3 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl pointer-events-none"
+              >
+                {t('streams.form.ipAllowTooltip')}
+              </span>
+            </span>
+          </div>
           {errors.ipAllow?.message && (
             <p className="text-xs text-red-400 mb-2">{errors.ipAllow.message}</p>
           )}
@@ -265,12 +276,23 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-200 mb-2">
-            {t('streams.form.ipDeny')}
-          </label>
-          <p className="text-xs text-zinc-500 mb-2">
-            {t('streams.form.ipDenyDesc')}
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="text-sm font-medium text-zinc-200">
+              {t('streams.form.ipDeny')}
+            </label>
+            <span className="relative group">
+              <HelpCircle
+                className="w-4 h-4 text-zinc-500 hover:text-zinc-400 cursor-help flex-shrink-0"
+                aria-label={t('streams.form.ipDenyTooltip')}
+              />
+              <span
+                role="tooltip"
+                className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-72 p-3 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl pointer-events-none"
+              >
+                {t('streams.form.ipDenyTooltip')}
+              </span>
+            </span>
+          </div>
           {errors.ipDeny?.message && (
             <p className="text-xs text-red-400 mb-2">{errors.ipDeny.message}</p>
           )}
