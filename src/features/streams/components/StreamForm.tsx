@@ -78,7 +78,11 @@ const DEFAULT_DETECTORS = {
 };
 
 function normalizeIp(value: string): string {
-  return value.trim().toLowerCase();
+  let s = value.trim().toLowerCase();
+  if (s.endsWith('/32')) {
+    s = s.slice(0, -3);
+  }
+  return s;
 }
 
 function useIpDuplicateValidation(

@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, CheckCircle2, AlertCircle } from 'lucide-react';
 
 type ToastType = 'success' | 'error';
@@ -61,10 +61,12 @@ function Toast({
   type: ToastType;
   onClose: () => void;
 }) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
-    const timer = setTimeout(onClose, 5000);
+    const timer = setTimeout(() => onCloseRef.current(), 5000);
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, []);
 
   return (
     <div
@@ -94,7 +96,11 @@ function showToast(message: string, type: ToastType) {
   ensureToastContainer();
   const id = Math.random().toString(36).substring(7);
   toasts.push({ id, message, type });
-  updateToasts?.(toasts.slice());
+  const flush = () => updateToasts?.(toasts.slice());
+  flush();
+  if (!updateToasts) {
+    setTimeout(flush, 0);
+  }
 }
 
 export const toast = {
