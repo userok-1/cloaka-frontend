@@ -77,6 +77,49 @@ const DEFAULT_DETECTORS = {
   vpnProxy: true,
 };
 
+function normalizeIp(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function useIpDuplicateValidation(
+  ipAllow: string[],
+  ipDeny: string[],
+  errorMessage: string
+): {
+  getAllowError: (index: number) => string | undefined;
+  getDenyError: (index: number) => string | undefined;
+} {
+  const allowNorm = ipAllow.map(normalizeIp);
+  const denyNorm = ipDeny.map(normalizeIp);
+  const allowSet = new Set(allowNorm.filter(Boolean));
+  const denySet = new Set(denyNorm.filter(Boolean));
+  const allowCount = new Map<string, number>();
+  const denyCount = new Map<string, number>();
+  for (const v of allowNorm) {
+    if (v === '') continue;
+    allowCount.set(v, (allowCount.get(v) ?? 0) + 1);
+  }
+  for (const v of denyNorm) {
+    if (v === '') continue;
+    denyCount.set(v, (denyCount.get(v) ?? 0) + 1);
+  }
+  const allowDuplicated = new Set<string>([...allowCount.entries()].filter(([, n]) => n > 1).map(([k]) => k));
+  const denyDuplicated = new Set<string>([...denyCount.entries()].filter(([, n]) => n > 1).map(([k]) => k));
+  const crossDuplicated = new Set<string>([...allowSet].filter((v) => denySet.has(v)));
+
+  const getAllowError = (index: number): string | undefined => {
+    const v = allowNorm[index];
+    if (v === '') return undefined;
+    return allowDuplicated.has(v) || crossDuplicated.has(v) ? errorMessage : undefined;
+  };
+  const getDenyError = (index: number): string | undefined => {
+    const v = denyNorm[index];
+    if (v === '') return undefined;
+    return denyDuplicated.has(v) || crossDuplicated.has(v) ? errorMessage : undefined;
+  };
+  return { getAllowError, getDenyError };
+}
+
 export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: StreamFormProps) {
   const { t } = useTranslation();
 
@@ -101,6 +144,13 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
   });
 
   const allowedGeos = watch('allowedGeos') || [];
+  const ipAllow = watch('ipAllow') ?? [];
+  const ipDeny = watch('ipDeny') ?? [];
+  const { getAllowError, getDenyError } = useIpDuplicateValidation(
+    ipAllow,
+    ipDeny,
+    t('streams.form.ipDuplicateError')
+  );
 
   const {
     fields: allowFields,
@@ -245,23 +295,37 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             <p className="text-xs text-red-400 mb-2">{errors.ipAllow.message}</p>
           )}
           <div className="space-y-2">
-            {allowFields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-center">
-                <Input
-                  placeholder="192.168.1.1"
-                  className="flex-1"
-                  {...register(`ipAllow.${index}`)}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeAllow(index)}
-                  className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
-                  title={t('common.delete')}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+            {allowFields.map((field, index) => {
+              const duplicateError = getAllowError(index);
+              return (
+                <div key={field.id} className="relative group">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      placeholder="192.168.1.1"
+                      className="flex-1"
+                      error={duplicateError}
+                      {...register(`ipAllow.${index}`)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeAllow(index)}
+                      className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+                      title={t('common.delete')}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {duplicateError && (
+                    <span
+                      role="tooltip"
+                      className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-72 p-3 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl pointer-events-none"
+                    >
+                      {duplicateError}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
             <Button
               type="button"
               variant="secondary"
@@ -297,23 +361,37 @@ export function StreamForm({ defaultValues, onSubmit, isLoading, submitLabel }: 
             <p className="text-xs text-red-400 mb-2">{errors.ipDeny.message}</p>
           )}
           <div className="space-y-2">
-            {denyFields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-center">
-                <Input
-                  placeholder="192.168.1.1"
-                  className="flex-1"
-                  {...register(`ipDeny.${index}`)}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeDeny(index)}
-                  className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
-                  title={t('common.delete')}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+            {denyFields.map((field, index) => {
+              const duplicateError = getDenyError(index);
+              return (
+                <div key={field.id} className="relative group">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      placeholder="192.168.1.1"
+                      className="flex-1"
+                      error={duplicateError}
+                      {...register(`ipDeny.${index}`)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeDeny(index)}
+                      className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+                      title={t('common.delete')}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {duplicateError && (
+                    <span
+                      role="tooltip"
+                      className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-72 p-3 text-xs text-zinc-200 bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl pointer-events-none"
+                    >
+                      {duplicateError}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
             <Button
               type="button"
               variant="secondary"

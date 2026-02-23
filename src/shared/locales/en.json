@@ -130,7 +130,8 @@
       "ipAllowTooltip": "Visitors from these IPs (or CIDR ranges) will always be allowed to pass the stream, regardless of other checks (geo, VPN, bots). Use for trusted sources, offices, or test IPs.",
       "ipDeny": "IP Deny List (Blacklist)",
       "ipDenyTooltip": "Visitors from these IPs (or CIDR ranges) will always be blocked and sent to the white URL. Use to block known bad actors, datacenter IPs, or competitors.",
-      "addIp": "Add IP"
+      "addIp": "Add IP",
+      "ipDuplicateError": "Such IP/CIDR already added"
     }
   },
   "trash": {
