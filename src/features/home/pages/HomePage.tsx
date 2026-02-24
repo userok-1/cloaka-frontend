@@ -12,10 +12,11 @@ export function HomePage() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
 
-  const { data: streams = [], isLoading: streamsLoading } = useQuery({
+  const { data: streamsResponse, isLoading: streamsLoading } = useQuery({
     queryKey: ['streams', 'home'],
     queryFn: () => streamsApi.getAll({ limit: 100, scope: 'alive' }),
   });
+  const streams = streamsResponse?.data ?? [];
 
   const { data: filterLogs, isLoading: logsLoading } = useQuery({
     queryKey: ['logs', 'home'],

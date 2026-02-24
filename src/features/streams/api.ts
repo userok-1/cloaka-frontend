@@ -5,15 +5,16 @@ import {
   CreateStreamDto,
   UpdateStreamDto,
   GetStreamsDto,
+  GetStreamsResponse,
+  GetStreamsResponseSchema,
 } from '../../shared/lib/zod-schemas';
-import { z } from 'zod';
 
 export const streamsApi = {
-  getAll: async (params?: Partial<GetStreamsDto>): Promise<Stream[]> => {
+  getAll: async (params?: Partial<GetStreamsDto>): Promise<GetStreamsResponse> => {
     const response = await apiRequest<unknown>('/streams', {
       params: params as Record<string, string | number | boolean | undefined>,
     });
-    return z.array(StreamSchema).parse(response);
+    return GetStreamsResponseSchema.parse(response);
   },
 
   getById: async (id: number): Promise<Stream> => {

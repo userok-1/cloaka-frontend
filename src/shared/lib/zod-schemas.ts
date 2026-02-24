@@ -93,7 +93,12 @@ export const GetStreamsDtoSchema = z.object({
   sort: SortOrderSchema.optional().default('desc'),
   sortBy: StreamSortBySchema.optional().default('createdAt'),
   scope: StreamScopeSchema.optional().default('alive'),
-  userId: z.number().int().optional(),
+  userId: z.number().int().min(1).optional(),
+  search: z.string().optional(),
+  mode: StreamModeSchema.optional(),
+  geo: z.string().length(2).optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
 });
 
 export const StreamDetectorsOptionsSchema = z
@@ -164,6 +169,17 @@ export function PaginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
     total: z.number().optional(),
   });
 }
+
+export const GetStreamsResponseSchema = z.union([
+  z.object({
+    data: z.array(StreamSchema),
+    total: z.number().optional(),
+    totalFiltered: z.number().optional(),
+    pages: z.number().optional(),
+  }),
+  z.array(StreamSchema).transform((arr) => ({ data: arr, total: arr.length, totalFiltered: arr.length, pages: arr.length > 0 ? 1 : 0 })),
+]);
+export type GetStreamsResponse = z.infer<typeof GetStreamsResponseSchema>;
 
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type UserRegisterDto = z.infer<typeof UserRegisterDtoSchema>;

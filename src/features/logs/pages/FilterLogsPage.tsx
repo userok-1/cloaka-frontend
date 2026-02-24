@@ -21,10 +21,11 @@ export function FilterLogsPage() {
   const sort = (searchParams.get('sort') as 'asc' | 'desc') || 'desc';
   const streamIds = searchParams.get('streamIds') || undefined;
 
-  const { data: streams = [] } = useQuery({
+  const { data: streamsResponse } = useQuery({
     queryKey: ['streams', 'alive'],
     queryFn: () => streamsApi.getAll({ scope: 'alive', limit: 500 }),
   });
+  const streams = streamsResponse?.data ?? [];
 
   const streamNameMap = useMemo(() => {
     const map: Record<number, string> = {};

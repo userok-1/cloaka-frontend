@@ -1,7 +1,8 @@
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Eye, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Eye, Copy, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
 import { LoadingState } from '../../../shared/ui/LoadingState';
@@ -10,20 +11,84 @@ import { Button } from '../../../shared/ui/Button';
 import { confirmDialog } from '../../../shared/ui/ConfirmDialog';
 import { toast } from '../../../shared/ui/toast';
 import { Stream } from '../../../shared/lib/zod-schemas';
-import { useState } from 'react';
+import type { GetStreamsDto } from '../../../shared/lib/zod-schemas';
+
+const LIMIT = 10;
+const SEARCH_DEBOUNCE_MS = 400;
+
+type StreamScope = 'alive' | 'deleted' | 'all';
+type StreamMode = 'redirect' | 'fingerprint';
 
 export function StreamsListPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = 10;
+  const urlSearch = searchParams.get('search') ?? '';
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: streams = [], isLoading } = useQuery({
-    queryKey: ['streams', 'alive', page],
-    queryFn: () => streamsApi.getAll({ scope: 'alive', page, limit }),
+  useEffect(() => {
+    setSearchInput(urlSearch);
+  }, [urlSearch]);
+
+  useEffect(() => {
+    if (searchInput === urlSearch) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      const next = new URLSearchParams(searchParams);
+      if (searchInput.trim()) {
+        next.set('search', searchInput.trim());
+        next.set('page', '1');
+      } else {
+        next.delete('search');
+        next.delete('page');
+      }
+      setSearchParams(next);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchInput, urlSearch, searchParams, setSearchParams]);
+
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+  const scope = (searchParams.get('scope') || 'alive') as StreamScope;
+  const mode = searchParams.get('mode') as StreamMode | null;
+  const geo = searchParams.get('geo') ?? '';
+  const dateFrom = searchParams.get('dateFrom') ?? '';
+  const dateTo = searchParams.get('dateTo') ?? '';
+
+  const params: Partial<GetStreamsDto> = {
+    page,
+    limit: LIMIT,
+    scope,
+    ...(urlSearch.trim() ? { search: urlSearch.trim() } : {}),
+    ...(mode === 'redirect' || mode === 'fingerprint' ? { mode } : {}),
+    ...(geo.length === 2 ? { geo: geo.toUpperCase() } : {}),
+    ...(dateFrom ? { dateFrom } : {}),
+    ...(dateTo ? { dateTo } : {}),
+  };
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['streams', params],
+    queryFn: () => streamsApi.getAll(params),
   });
+
+  const streams = data?.data ?? [];
+  const totalPages = data?.pages ?? 0;
+  const totalFiltered = data?.totalFiltered ?? data?.total ?? 0;
+  const isInitialLoading = isLoading && !data;
+
+  const updateParam = (key: string, value: string | number) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === '' || (key === 'page' && value === 1)) {
+      next.delete(key);
+    } else {
+      next.set(key, String(value));
+    }
+    if (key !== 'page') next.set('page', '1');
+    setSearchParams(next);
+  };
 
   const trashMutation = useMutation({
     mutationFn: streamsApi.trash,
@@ -53,24 +118,6 @@ export function StreamsListPage() {
     toast.success(t('streams.urlCopied'));
   };
 
-  const handlePageChange = (newPage: number) => {
-    setSearchParams({ page: String(newPage) });
-  };
-
-  const filteredStreams = streams.filter((stream) =>
-    stream.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const canNextPage = streams.length === limit;
-
-  if (isLoading) {
-    return (
-      <Layout>
-        <LoadingState />
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="space-y-6">
@@ -84,15 +131,67 @@ export function StreamsListPage() {
           </Link>
         </div>
 
-        <input
-          type="text"
-          placeholder={t('common.searchPlaceholder')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        />
+        <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+          <input
+            type="text"
+            placeholder={t('common.searchPlaceholder')}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="flex-1 min-w-[200px] px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
+          />
+          <div className="flex gap-2 flex-wrap items-center">
+            <div className="relative">
+              <select
+                value={scope}
+                onChange={(e) => updateParam('scope', e.target.value)}
+                className="w-full min-w-[100px] pl-3 pr-9 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors appearance-none"
+              >
+                <option value="alive">{t('streams.scopeAlive')}</option>
+                <option value="deleted">{t('streams.scopeDeleted')}</option>
+                <option value="all">{t('streams.scopeAll')}</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 w-4 h-4 -translate-y-1/2 pointer-events-none text-zinc-400 shrink-0" />
+            </div>
+            <div className="relative">
+              <select
+                value={mode ?? ''}
+                onChange={(e) => updateParam('mode', e.target.value)}
+                className="w-full min-w-[110px] pl-3 pr-9 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors appearance-none"
+              >
+                <option value="">{t('streams.filterMode')}</option>
+                <option value="redirect">Redirect</option>
+                <option value="fingerprint">Fingerprint</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 w-4 h-4 -translate-y-1/2 pointer-events-none text-zinc-400 shrink-0" />
+            </div>
+            <input
+              type="text"
+              placeholder={t('streams.filterGeo')}
+              value={geo}
+              onChange={(e) => updateParam('geo', e.target.value.slice(0, 2).toUpperCase())}
+              maxLength={2}
+              className="w-20 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors uppercase"
+            />
+            <input
+              type="date"
+              placeholder={t('streams.dateFrom')}
+              value={dateFrom}
+              onChange={(e) => updateParam('dateFrom', e.target.value)}
+              className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
+            />
+            <input
+              type="date"
+              placeholder={t('streams.dateTo')}
+              value={dateTo}
+              onChange={(e) => updateParam('dateTo', e.target.value)}
+              className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
+            />
+          </div>
+        </div>
 
-        {filteredStreams.length === 0 ? (
+        {isInitialLoading ? (
+          <LoadingState />
+        ) : streams.length === 0 ? (
           <EmptyState
             icon={Plus}
             title={t('streams.noStreams')}
@@ -104,7 +203,8 @@ export function StreamsListPage() {
             }
           />
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+          <>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-800">
@@ -119,7 +219,7 @@ export function StreamsListPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredStreams.map((stream) => (
+                {streams.map((stream) => (
                   <tr
                     key={stream.id}
                     className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition-colors"
@@ -166,30 +266,38 @@ export function StreamsListPage() {
               </tbody>
             </table>
           </div>
-        )}
 
-        {filteredStreams.length > 0 && (
-          <div className="flex items-center justify-between pt-4">
-            <div className="text-sm text-zinc-400">
-              {t('common.page')} <span className="font-medium text-zinc-100">{page}</span>
+            <div className="flex items-center justify-between pt-4">
+              <div className="text-sm text-zinc-400">
+                {t('common.page')}{' '}
+                <span className="font-medium text-zinc-100">{page}</span>
+                {totalPages > 0 && (
+                  <> {t('common.of')} <span className="font-medium text-zinc-100">{totalPages}</span></>
+                )}
+                {totalFiltered > 0 && (
+                  <span className="ml-2">
+                    · {totalFiltered} {t('streams.totalStreams')}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => updateParam('page', page - 1)}
+                  disabled={page <= 1}
+                  className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" /> {t('common.prev')}
+                </button>
+                <button
+                  onClick={() => updateParam('page', page + 1)}
+                  disabled={totalPages > 0 ? page >= totalPages : streams.length < LIMIT}
+                  className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {t('common.next')} <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-                className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" /> {t('common.prev')}
-              </button>
-              <button
-                onClick={() => handlePageChange(page + 1)}
-                disabled={!canNextPage}
-                className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {t('common.next')} <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          </>
         )}
       </div>
     </Layout>

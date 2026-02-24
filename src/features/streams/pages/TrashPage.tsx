@@ -26,10 +26,11 @@ export function TrashPage() {
     }
   }, [isAdmin, activeTab]);
 
-  const { data: streams = [], isLoading } = useQuery({
+  const { data: streamsResponse, isLoading } = useQuery({
     queryKey: ['streams', 'deleted'],
     queryFn: () => streamsApi.getAll({ scope: 'deleted' }),
   });
+  const streams = streamsResponse?.data ?? [];
 
   const restoreMutation = useMutation({
     mutationFn: streamsApi.restore,
