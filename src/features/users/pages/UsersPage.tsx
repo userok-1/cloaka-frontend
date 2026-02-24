@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -18,10 +18,38 @@ function formatDate(value: string | null): string {
   });
 }
 
+const SEARCH_DEBOUNCE_MS = 400;
+
 export function UsersPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [emailQuery, setEmailQuery] = useState('');
+  const urlSearch = searchParams.get('search') ?? '';
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setSearchInput(urlSearch);
+  }, [urlSearch]);
+
+  useEffect(() => {
+    if (searchInput === urlSearch) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      const next = new URLSearchParams(searchParams);
+      if (searchInput.trim()) {
+        next.set('search', searchInput.trim());
+        next.set('page', '1');
+      } else {
+        next.delete('search');
+        next.delete('page');
+      }
+      setSearchParams(next);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchInput, urlSearch, searchParams, setSearchParams]);
 
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
   const scope = (searchParams.get('scope') || 'alive') as 'alive' | 'deleted' | 'all';
@@ -34,6 +62,7 @@ export function UsersPage() {
     sort,
     scope,
     ...(role ? { role } : {}),
+    ...(urlSearch.trim() ? { search: urlSearch.trim() } : {}),
   };
 
   const { data, isLoading } = useQuery({
@@ -54,20 +83,7 @@ export function UsersPage() {
   const users = data?.data ?? [];
   const totalPages = data?.pages ?? 0;
   const totalFiltered = data?.totalFiltered ?? 0;
-
-  const filteredUsers = emailQuery.trim()
-    ? users.filter((u) =>
-        u.email.toLowerCase().includes(emailQuery.trim().toLowerCase())
-      )
-    : users;
-
-  if (isLoading) {
-    return (
-      <Layout>
-        <LoadingState />
-      </Layout>
-    );
-  }
+  const isInitialLoading = isLoading && !data;
 
   return (
     <Layout>
@@ -77,9 +93,9 @@ export function UsersPage() {
         <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
           <input
             type="text"
-            placeholder={t('users.searchPlaceholder')}
-            value={emailQuery}
-            onChange={(e) => setEmailQuery(e.target.value)}
+            placeholder={t('common.searchPlaceholder')}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1 min-w-[200px] px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
           />
           <div className="flex gap-2 flex-wrap items-center">
@@ -121,7 +137,9 @@ export function UsersPage() {
           </div>
         </div>
 
-        {filteredUsers.length === 0 ? (
+        {isInitialLoading ? (
+          <LoadingState />
+        ) : users.length === 0 ? (
           <EmptyState
             icon={Users}
             title={t('users.noUsers')}
@@ -133,6 +151,9 @@ export function UsersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800">
+                    <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                      {t('common.name')}
+                    </th>
                     <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
                       {t('common.email')}
                     </th>
@@ -150,19 +171,24 @@ export function UsersPage() {
                         {t('users.deletedAt')}
                       </th>
                     )}
-                    <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
-                      {t('common.id')}
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user: User) => (
+                  {users.map((user: User) => (
                     <tr
                       key={user.id}
                       className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-zinc-200">
+                        <div className="text-sm font-medium text-zinc-200">
+                          {user.name}
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          ID: {user.id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-zinc-300">
                           {user.email}
                         </span>
                       </td>
@@ -188,9 +214,6 @@ export function UsersPage() {
                           {formatDate(user.deletedAt)}
                         </td>
                       )}
-                      <td className="px-6 py-4 text-xs text-zinc-500">
-                        {user.id}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

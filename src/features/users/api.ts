@@ -8,6 +8,7 @@ export type Scope = 'alive' | 'deleted' | 'all';
 
 export interface User {
   id: number;
+  name: string;
   email: string;
   role: UserRole;
   createdAt: string;
@@ -21,6 +22,7 @@ export interface GetUsersParams {
   sort?: SortOrder;
   scope?: Scope;
   role?: UserRole;
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
 }

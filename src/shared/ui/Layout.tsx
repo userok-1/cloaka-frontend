@@ -161,7 +161,7 @@ export function Layout({ children }: LayoutProps) {
             >
               <User className="w-4 h-4 text-zinc-400" />
               <div className="text-sm">
-                <div className="text-zinc-200">{user?.email}</div>
+                <div className="text-zinc-200">{user?.name ?? user?.email}</div>
                 <div className="text-zinc-500 text-xs capitalize">{user?.role}</div>
               </div>
             </Link>

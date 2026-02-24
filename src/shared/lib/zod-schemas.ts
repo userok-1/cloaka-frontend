@@ -12,6 +12,7 @@ export const SortOrderSchema = z.enum(['asc', 'desc']);
 
 export const PublicUserSchema = z.object({
   id: z.number(),
+  name: z.string().optional(),
   email: z.string().email(),
   role: UserRoleSchema,
   createdAt: z.string(),
