@@ -57,4 +57,22 @@ export const streamsApi = {
       method: 'DELETE',
     });
   },
+
+  /** Users that have at least one stream (for admin filter). GET /streams/owners?search=...&limit=50 */
+  getStreamOwners: async (params?: { search?: string; limit?: number }): Promise<StreamOwner[]> => {
+    try {
+      const response = await apiRequest<StreamOwner[]>('/streams/owners', {
+        params: params as Record<string, string | number | undefined>,
+      });
+      return Array.isArray(response) ? response : [];
+    } catch {
+      return [];
+    }
+  },
 };
+
+export interface StreamOwner {
+  id: number;
+  name?: string;
+  email: string;
+}

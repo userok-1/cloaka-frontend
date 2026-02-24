@@ -124,6 +124,10 @@
     "dateFrom": "Дата від",
     "dateTo": "Дата до",
     "totalStreams": "потоків",
+    "filterByUser": "Користувач",
+    "filterUserPlaceholder": "Ім'я, пошта або ID",
+    "noUserMatches": "Нічого не знайдено",
+    "noUsersWithStreams": "Немає користувачів з потоками",
     "form": {
       "name": "Назва потоку",
       "namePlaceholder": "Моя кампанія",

@@ -124,6 +124,10 @@
     "dateFrom": "From date",
     "dateTo": "To date",
     "totalStreams": "streams",
+    "filterByUser": "User",
+    "filterUserPlaceholder": "Name, email or ID",
+    "noUserMatches": "No matches",
+    "noUsersWithStreams": "No users with streams",
     "form": {
       "name": "Stream Name",
       "namePlaceholder": "My Campaign",
