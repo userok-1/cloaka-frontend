@@ -30,7 +30,8 @@
     "id": "ID",
     "mode": "Mode",
     "reason": "Reason",
-    "all": "All"
+    "all": "All",
+    "total": "total"
   },
   "nav": {
     "home": "Home",
@@ -180,7 +181,21 @@
   "users": {
     "title": "Users",
     "usersManagement": "Users management",
-    "usersManagementDesc": "User list and management will appear here"
+    "usersManagementDesc": "User list and management will appear here",
+    "searchPlaceholder": "Search by email...",
+    "noUsers": "No users",
+    "noUsersDesc": "No users match the current filters",
+    "scopeAll": "All",
+    "scopeAlive": "Active",
+    "scopeDeleted": "Deleted",
+    "sortByEmail": "Email",
+    "sortByCreatedAt": "Created",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "deletedAt": "Deleted At",
+    "sortAsc": "Oldest",
+    "sortDesc": "Newest",
+    "totalUsers": "users"
   },
   "roles": {
     "admin": "Admin",

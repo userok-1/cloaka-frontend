@@ -30,7 +30,8 @@
     "id": "ID",
     "mode": "Режим",
     "reason": "Причина",
-    "all": "Всі"
+    "all": "Всі",
+    "total": "всього"
   },
   "nav": {
     "home": "Головна",
@@ -180,7 +181,21 @@
   "users": {
     "title": "Користувачі",
     "usersManagement": "Управління користувачами",
-    "usersManagementDesc": "Список користувачів та управління ними з'явиться тут"
+    "usersManagementDesc": "Список користувачів та управління ними з'явиться тут",
+    "searchPlaceholder": "Пошук за email...",
+    "noUsers": "Немає користувачів",
+    "noUsersDesc": "За поточними фільтрами користувачів не знайдено",
+    "scopeAll": "Усі",
+    "scopeAlive": "Активні",
+    "scopeDeleted": "Видалені",
+    "sortByEmail": "Email",
+    "sortByCreatedAt": "Дата створення",
+    "createdAt": "Створено",
+    "updatedAt": "Оновлено",
+    "deletedAt": "Видалено",
+    "sortAsc": "Старіші",
+    "sortDesc": "Новіші",
+    "totalUsers": "користувачів"
   },
   "roles": {
     "admin": "Адміністратор",
