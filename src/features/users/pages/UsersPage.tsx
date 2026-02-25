@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Users, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Users, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
 import { usersApi, type User, type UserRole } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
 import { LoadingState } from '../../../shared/ui/LoadingState';
@@ -56,6 +56,46 @@ export function UsersPage() {
   const role = searchParams.get('role') as UserRole | null;
   const sort = (searchParams.get('sort') || 'desc') as 'asc' | 'desc';
 
+  const [scopeDropdownOpen, setScopeDropdownOpen] = useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const scopeDropdownRef = useRef<HTMLDivElement>(null);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scopeDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (scopeDropdownRef.current && !scopeDropdownRef.current.contains(e.target as Node)) {
+        setScopeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [scopeDropdownOpen]);
+
+  useEffect(() => {
+    if (!roleDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target as Node)) {
+        setRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [roleDropdownOpen]);
+
+  useEffect(() => {
+    if (!sortDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen]);
+
   const params = {
     page,
     limit: LIMIT,
@@ -90,51 +130,144 @@ export function UsersPage() {
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold text-zinc-100">{t('users.title')}</h1>
 
-        <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center w-full">
           <input
             type="text"
             placeholder={t('common.searchPlaceholder')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex-1 min-w-[200px] px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
+            className="flex-1 min-w-[200px] px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
           />
-          <div className="flex gap-2 flex-wrap items-center">
-            <div className="relative">
-              <select
-                value={scope}
-                onChange={(e) => updateParam('scope', e.target.value)}
-                className="w-full min-w-[100px] pl-3 pr-9 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors appearance-none"
+            <div className="relative flex-1 min-w-[110px]" ref={scopeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setScopeDropdownOpen((v) => !v)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0 ${
+                  scopeDropdownOpen ? 'border-brand-500' : 'border-zinc-700'
+                }`}
               >
-                <option value="alive">{t('users.scopeAlive')}</option>
-                <option value="deleted">{t('users.scopeDeleted')}</option>
-                <option value="all">{t('users.scopeAll')}</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 w-4 h-4 -translate-y-1/2 pointer-events-none text-zinc-400 shrink-0" />
+                <span className="truncate min-w-0">
+                  {scope === 'alive'
+                    ? t('users.scopeAlive')
+                    : scope === 'deleted'
+                      ? t('users.scopeDeleted')
+                      : t('users.scopeAll')}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${scopeDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {scopeDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[180px]">
+                  <div className="max-h-60 overflow-y-auto py-1">
+                    {(['alive', 'deleted', 'all'] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          updateParam('scope', s);
+                          setScopeDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                          scope === s ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                        }`}
+                      >
+                        {s === 'alive'
+                          ? t('users.scopeAlive')
+                          : s === 'deleted'
+                            ? t('users.scopeDeleted')
+                            : t('users.scopeAll')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="relative">
-              <select
-                value={role ?? ''}
-                onChange={(e) => updateParam('role', e.target.value)}
-                className="w-full min-w-[100px] pl-3 pr-9 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors appearance-none"
+            <div className="relative flex-1 min-w-[110px]" ref={roleDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setRoleDropdownOpen((v) => !v)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0 ${
+                  roleDropdownOpen ? 'border-brand-500' : 'border-zinc-700'
+                }`}
               >
-                <option value="">{t('common.role')}</option>
-                <option value="user">{t('roles.user')}</option>
-                <option value="admin">{t('roles.admin')}</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 w-4 h-4 -translate-y-1/2 pointer-events-none text-zinc-400 shrink-0" />
+                <span className="truncate min-w-0">
+                  {role ? t(`roles.${role}`) : t('common.role')}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {roleDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[180px]">
+                  <div className="max-h-60 overflow-y-auto py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateParam('role', '');
+                        setRoleDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-800 transition-colors"
+                    >
+                      <X className="w-4 h-4 shrink-0" />
+                      {t('common.role')}
+                    </button>
+                    {(['user', 'admin'] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => {
+                          updateParam('role', r);
+                          setRoleDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                          role === r ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                        }`}
+                      >
+                        {t(`roles.${r}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="relative">
-              <select
-                value={sort}
-                onChange={(e) => updateParam('sort', e.target.value)}
-                className="w-full min-w-[120px] pl-3 pr-9 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors appearance-none"
+            <div className="relative flex-1 min-w-[120px]" ref={sortDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen((v) => !v)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0 ${
+                  sortDropdownOpen ? 'border-brand-500' : 'border-zinc-700'
+                }`}
               >
-                <option value="desc">{t('users.sortDesc')}</option>
-                <option value="asc">{t('users.sortAsc')}</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 w-4 h-4 -translate-y-1/2 pointer-events-none text-zinc-400 shrink-0" />
+                <span className="truncate min-w-0">
+                  {sort === 'desc' ? t('users.sortDesc') : t('users.sortAsc')}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {sortDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[180px]">
+                  <div className="max-h-60 overflow-y-auto py-1">
+                    {(['desc', 'asc'] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          updateParam('sort', s);
+                          setSortDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                          sort === s ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                        }`}
+                      >
+                        {s === 'desc' ? t('users.sortDesc') : t('users.sortAsc')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
         </div>
 
         {isInitialLoading ? (

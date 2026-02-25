@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Eye, Copy, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
+import DatePicker from 'react-datepicker';
 import { streamsApi } from '../api';
 import { Layout } from '../../../shared/ui/Layout';
 import { LoadingState } from '../../../shared/ui/LoadingState';
@@ -13,6 +14,15 @@ import { toast } from '../../../shared/ui/toast';
 import { Stream } from '../../../shared/lib/zod-schemas';
 import type { GetStreamsDto } from '../../../shared/lib/zod-schemas';
 import { useAuthStore } from '../../auth/store';
+import { GEO_COUNTRIES } from '../../../shared/data/countries';
+
+/** ISO 3166-1 alpha-2 code -> flag emoji (e.g. UA -> 🇺🇦) */
+function countryFlag(code: string): string {
+  if (code.length !== 2) return '';
+  return [...code.toUpperCase()]
+    .map((c) => String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0)))
+    .join('');
+}
 
 const LIMIT = 10;
 const SEARCH_DEBOUNCE_MS = 400;
@@ -68,6 +78,13 @@ export function StreamsListPage() {
   const ownerSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [geoDropdownOpen, setGeoDropdownOpen] = useState(false);
+  const [geoSearchInput, setGeoSearchInput] = useState('');
+  const geoDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
+  const modeDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (ownerSearchDebounceRef.current) clearTimeout(ownerSearchDebounceRef.current);
     ownerSearchDebounceRef.current = setTimeout(() => {
@@ -89,6 +106,59 @@ export function StreamsListPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userDropdownOpen]);
+
+  useEffect(() => {
+    if (!geoDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (geoDropdownRef.current && !geoDropdownRef.current.contains(e.target as Node)) {
+        setGeoDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [geoDropdownOpen]);
+
+  useEffect(() => {
+    if (!modeDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modeDropdownRef.current && !modeDropdownRef.current.contains(e.target as Node)) {
+        setModeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [modeDropdownOpen]);
+
+  const handleSelectMode = (value: StreamMode | null) => {
+    updateParam('mode', value ?? '');
+    setModeDropdownOpen(false);
+  };
+
+  const filteredCountries = useMemo(() => {
+    if (!geoSearchInput.trim()) return GEO_COUNTRIES;
+    const q = geoSearchInput.trim().toLowerCase();
+    const codeLower = q.length === 2 ? q : '';
+    return GEO_COUNTRIES.filter((c) => {
+      const code = c.code.toLowerCase();
+      const nameMatch = c.name.toLowerCase().includes(q);
+      const codeExact = codeLower && code === codeLower;
+      const codeIncludes = code.includes(q);
+      return codeExact || codeIncludes || nameMatch;
+    }).sort((a, b) => {
+      if (!codeLower) return 0;
+      const aExact = a.code.toLowerCase() === codeLower ? 1 : 0;
+      const bExact = b.code.toLowerCase() === codeLower ? 1 : 0;
+      return bExact - aExact;
+    });
+  }, [geoSearchInput]);
+
+  const selectedCountry = geo ? GEO_COUNTRIES.find((c) => c.code === geo.toUpperCase()) : null;
+
+  const handleSelectGeo = (code: string | null) => {
+    updateParam('geo', code ?? '');
+    setGeoDropdownOpen(false);
+    setGeoSearchInput('');
+  };
 
   const { data: streamOwners = [], isFetching: ownersFetching } = useQuery({
     queryKey: ['streams', 'owners', ownerSearchDebounced],
@@ -182,21 +252,21 @@ export function StreamsListPage() {
           </Link>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+        <div className="space-y-4">
           <input
             type="text"
             placeholder={t('common.searchPlaceholder')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex-1 min-w-[200px] px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
+            className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
           />
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex gap-2 flex-wrap items-center w-full">
             {isAdmin && (
-              <div className="relative w-[260px] shrink-0" ref={userDropdownRef}>
+              <div className="relative flex-1 min-w-[200px]" ref={userDropdownRef}>
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen((v) => !v)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors text-left min-w-0"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0"
                 >
                   <span className="truncate min-w-0">
                     {selectedOwner
@@ -265,40 +335,150 @@ export function StreamsListPage() {
                 )}
               </div>
             )}
-            <div className="relative">
-              <select
-                value={mode ?? ''}
-                onChange={(e) => updateParam('mode', e.target.value)}
-                className="w-full min-w-[110px] pl-3 pr-9 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors appearance-none"
+            <div className="relative flex-1 min-w-[110px]" ref={modeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setModeDropdownOpen((v) => !v)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0 ${
+                  modeDropdownOpen ? 'border-brand-500' : 'border-zinc-700'
+                }`}
               >
-                <option value="">{t('streams.filterMode')}</option>
-                <option value="redirect">Redirect</option>
-                <option value="fingerprint">Fingerprint</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 w-4 h-4 -translate-y-1/2 pointer-events-none text-zinc-400 shrink-0" />
+                <span className="truncate min-w-0">
+                  {mode === 'redirect'
+                    ? 'Redirect'
+                    : mode === 'fingerprint'
+                      ? 'Fingerprint'
+                      : t('streams.filterMode')}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${modeDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {modeDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                  <div className="max-h-60 overflow-y-auto py-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectMode(null)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-800 transition-colors"
+                    >
+                      <X className="w-4 h-4 shrink-0" />
+                      {t('streams.filterMode')}
+                    </button>
+                    {(['redirect', 'fingerprint'] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => handleSelectMode(m)}
+                        className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                          mode === m ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                        }`}
+                      >
+                        {m === 'redirect' ? 'Redirect' : 'Fingerprint'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <input
-              type="text"
-              placeholder={t('streams.filterGeo')}
-              value={geo}
-              onChange={(e) => updateParam('geo', e.target.value.slice(0, 2).toUpperCase())}
-              maxLength={2}
-              className="w-20 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors uppercase"
-            />
-            <input
-              type="date"
-              placeholder={t('streams.dateFrom')}
-              value={dateFrom}
-              onChange={(e) => updateParam('dateFrom', e.target.value)}
-              className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
-            />
-            <input
-              type="date"
-              placeholder={t('streams.dateTo')}
-              value={dateTo}
-              onChange={(e) => updateParam('dateTo', e.target.value)}
-              className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 hover:border-brand-500 transition-colors"
-            />
+            <div className="relative flex-1 min-w-[180px]" ref={geoDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setGeoDropdownOpen((v) => !v)}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0"
+              >
+                <span className="min-w-0 flex items-center gap-2">
+                  {selectedCountry && (
+                    <>
+                      <span className="shrink-0">{countryFlag(selectedCountry.code)}</span>
+                      <span className="truncate">{selectedCountry.name} ({selectedCountry.code})</span>
+                    </>
+                  )}
+                  {!selectedCountry && (
+                    <>
+                      {geo && <span className="shrink-0">{countryFlag(geo)}</span>}
+                      <span className="truncate">{geo ? `${geo}` : t('streams.filterGeo')}</span>
+                    </>
+                  )}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${geoDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {geoDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[280px]">
+                  <div className="p-2 border-b border-zinc-800">
+                    <input
+                      type="text"
+                      placeholder={t('streams.filterGeoSearchPlaceholder')}
+                      value={geoSearchInput}
+                      onChange={(e) => setGeoSearchInput(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto py-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectGeo(null)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-800 transition-colors"
+                    >
+                      <X className="w-4 h-4 shrink-0" />
+                      {t('streams.filterGeo')}
+                    </button>
+                    {filteredCountries.length === 0 ? (
+                      <div className="px-3 py-4 text-sm text-zinc-500 text-center">
+                        {t('streams.noUserMatches')}
+                      </div>
+                    ) : (
+                      filteredCountries.map((c) => (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => handleSelectGeo(c.code)}
+                          className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                            geo.toUpperCase() === c.code ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="shrink-0">{countryFlag(c.code)}</span>
+                            <span className="truncate">{c.name}</span>
+                          </span>
+                          <span className="text-xs text-zinc-500 shrink-0">{c.code}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+              <DatePicker
+                placeholderText={t('streams.dateFrom')}
+                dateFormat="dd.MM.yyyy"
+                selected={dateFrom ? new Date(dateFrom) : null}
+                onChange={(d: Date | null) => updateParam('dateFrom', d ? d.toISOString().slice(0, 10) : '')}
+                isClearable
+                todayButton={t('common.today')}
+                calendarClassName="datepicker-dark-theme"
+                popperClassName="datepicker-dark-theme-popper"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+              />
+            </div>
+            <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+              <DatePicker
+                placeholderText={t('streams.dateTo')}
+                dateFormat="dd.MM.yyyy"
+                selected={dateTo ? new Date(dateTo) : null}
+                onChange={(d: Date | null) => updateParam('dateTo', d ? d.toISOString().slice(0, 10) : '')}
+                isClearable
+                todayButton={t('common.today')}
+                calendarClassName="datepicker-dark-theme"
+                popperClassName="datepicker-dark-theme-popper"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+              />
+            </div>
           </div>
         </div>
 
