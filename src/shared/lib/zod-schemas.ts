@@ -138,6 +138,7 @@ export const FilterResponseDtoSchema = z.object({
 export const FilterLogSchema = z.object({
   id: z.union([z.number(), z.string()]),
   streamId: z.number(),
+  streamName: z.string().nullable().optional(),
   passed: z.boolean(),
   reason: z.string().nullable().optional(),
   metadata: z.unknown().nullable().optional(),
@@ -161,6 +162,11 @@ export const GetLogsQuery = z.object({
   limit: z.number().int().min(1).max(1000).optional().default(50),
   sort: SortOrderSchema.optional().default('desc'),
   streamIds: z.string().optional(),
+  search: z.string().optional(),
+  reason: z.number().int().min(1).optional(),
+  passed: z.boolean().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
 });
 
 export function PaginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {

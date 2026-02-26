@@ -15,22 +15,37 @@ export const logsApi = {
     page?: number;
     sort?: 'asc' | 'desc';
     streamIds?: string;
+    search?: string;
+    reason?: number;
+    passed?: boolean;
+    dateFrom?: string;
+    dateTo?: string;
   }) => {
     const query = GetLogsQuery.parse({
       page: params.page ?? 1,
       limit: params.limit ?? 50,
       sort: params.sort ?? 'desc',
       streamIds: params.streamIds,
+      search: params.search,
+      reason: params.reason,
+      passed: params.passed,
+      dateFrom: params.dateFrom,
+      dateTo: params.dateTo,
     });
     const response = await apiRequest<{
       data?: Array<Record<string, unknown>>;
-      total?: number;
+      totalFiltered?: number;
     }>('/logger/filter-logs', {
       params: {
         page: query.page,
         limit: query.limit,
         sort: query.sort,
         ...(query.streamIds ? { streamIds: query.streamIds } : {}),
+        ...(query.search?.trim() ? { search: query.search.trim() } : {}),
+        ...(query.reason != null ? { reason: query.reason } : {}),
+        ...(query.passed !== undefined ? { passed: query.passed } : {}),
+        ...(query.dateFrom ? { dateFrom: query.dateFrom } : {}),
+        ...(query.dateTo ? { dateTo: query.dateTo } : {}),
       },
     });
 
@@ -39,12 +54,13 @@ export const logsApi = {
       data: rawData.map((item) => ({
         id: item.id,
         streamId: Number(item.stream_id ?? item.streamId ?? 0),
+        streamName: item.stream_name != null ? String(item.stream_name) : null,
         passed: Boolean(item.passed),
         reason: item.reason ?? null,
         metadata: item.metadata ?? null,
         createdAt: String(item.timestamp ?? item.createdAt ?? ''),
       })),
-      total: response?.total,
+      total: response?.totalFiltered,
     };
     return FilterLogsResponseSchema.parse(normalized);
   },

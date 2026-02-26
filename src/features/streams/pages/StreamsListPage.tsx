@@ -71,6 +71,7 @@ export function StreamsListPage() {
   const geo = searchParams.get('geo') ?? '';
   const dateFrom = searchParams.get('dateFrom') ?? '';
   const dateTo = searchParams.get('dateTo') ?? '';
+  const sort = (searchParams.get('sort') as 'asc' | 'desc') || 'desc';
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [ownerSearchInput, setOwnerSearchInput] = useState('');
@@ -84,6 +85,9 @@ export function StreamsListPage() {
 
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
   const modeDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (ownerSearchDebounceRef.current) clearTimeout(ownerSearchDebounceRef.current);
@@ -128,6 +132,17 @@ export function StreamsListPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [modeDropdownOpen]);
+
+  useEffect(() => {
+    if (!sortDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen]);
 
   const handleSelectMode = (value: StreamMode | null) => {
     updateParam('mode', value ?? '');
@@ -182,6 +197,7 @@ export function StreamsListPage() {
     page,
     limit: LIMIT,
     scope: 'alive',
+    sort,
     ...(urlSearch.trim() ? { search: urlSearch.trim() } : {}),
     ...(userId && userId > 0 ? { userId } : {}),
     ...(mode === 'redirect' || mode === 'fingerprint' ? { mode } : {}),
@@ -261,6 +277,32 @@ export function StreamsListPage() {
             className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
           />
           <div className="flex gap-2 flex-wrap items-center w-full">
+            <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+              <DatePicker
+                placeholderText={t('streams.dateFrom')}
+                dateFormat="dd.MM.yyyy"
+                selected={dateFrom ? new Date(dateFrom) : null}
+                onChange={(d: Date | null) => updateParam('dateFrom', d ? d.toISOString().slice(0, 10) : '')}
+                isClearable
+                todayButton={t('common.today')}
+                calendarClassName="datepicker-dark-theme"
+                popperClassName="datepicker-dark-theme-popper"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+              />
+            </div>
+            <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+              <DatePicker
+                placeholderText={t('streams.dateTo')}
+                dateFormat="dd.MM.yyyy"
+                selected={dateTo ? new Date(dateTo) : null}
+                onChange={(d: Date | null) => updateParam('dateTo', d ? d.toISOString().slice(0, 10) : '')}
+                isClearable
+                todayButton={t('common.today')}
+                calendarClassName="datepicker-dark-theme"
+                popperClassName="datepicker-dark-theme-popper"
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+              />
+            </div>
             {isAdmin && (
               <div className="relative flex-1 min-w-[200px]" ref={userDropdownRef}>
                 <button
@@ -453,31 +495,42 @@ export function StreamsListPage() {
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
-              <DatePicker
-                placeholderText={t('streams.dateFrom')}
-                dateFormat="dd.MM.yyyy"
-                selected={dateFrom ? new Date(dateFrom) : null}
-                onChange={(d: Date | null) => updateParam('dateFrom', d ? d.toISOString().slice(0, 10) : '')}
-                isClearable
-                todayButton={t('common.today')}
-                calendarClassName="datepicker-dark-theme"
-                popperClassName="datepicker-dark-theme-popper"
-                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
-              />
-            </div>
-            <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
-              <DatePicker
-                placeholderText={t('streams.dateTo')}
-                dateFormat="dd.MM.yyyy"
-                selected={dateTo ? new Date(dateTo) : null}
-                onChange={(d: Date | null) => updateParam('dateTo', d ? d.toISOString().slice(0, 10) : '')}
-                isClearable
-                todayButton={t('common.today')}
-                calendarClassName="datepicker-dark-theme"
-                popperClassName="datepicker-dark-theme-popper"
-                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
-              />
+            <div className="relative flex-1 min-w-[120px]" ref={sortDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen((v) => !v)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0 ${
+                  sortDropdownOpen ? 'border-brand-500' : 'border-zinc-700'
+                }`}
+              >
+                <span className="truncate min-w-0">
+                  {sort === 'desc' ? t('streams.sortNewest') : t('streams.sortOldest')}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {sortDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                  <div className="max-h-60 overflow-y-auto py-1">
+                    {(['desc', 'asc'] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          updateParam('sort', s);
+                          setSortDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                          sort === s ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                        }`}
+                      >
+                        {s === 'desc' ? t('streams.sortNewest') : t('streams.sortOldest')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
