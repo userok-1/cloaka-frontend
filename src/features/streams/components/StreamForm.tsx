@@ -13,23 +13,46 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { X, HelpCircle } from 'lucide-react';
 
-function isValidIpCidr(value: string): boolean {
-  const s = value.trim().toLowerCase();
-  if (!s) return false;
-  const [ipPart, cidrPart] = s.split('/');
-  if (!ipPart) return false;
+/** IPv6 address regex (full and compressed with ::) */
+const IPv6_REGEX =
+  /^(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}$|^::(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4}$|^(?:[0-9a-f]{1,4}:){1,7}:$|^(?:[0-9a-f]{1,4}:){1,6}:[0-9a-f]{1,4}$|^(?:[0-9a-f]{1,4}:){1,5}(?::[0-9a-f]{1,4}){1,2}$|^(?:[0-9a-f]{1,4}:){1,4}(?::[0-9a-f]{1,4}){1,3}$|^(?:[0-9a-f]{1,4}:){1,3}(?::[0-9a-f]{1,4}){1,4}$|^(?:[0-9a-f]{1,4}:){1,2}(?::[0-9a-f]{1,4}){1,5}$|^[0-9a-f]{1,4}:(?::[0-9a-f]{1,4}){1,6}$|^:(?::[0-9a-f]{1,4}){1,7}$|^::$/i;
+
+function isIPv4(ipPart: string): boolean {
   const octets = ipPart.split('.');
   if (octets.length !== 4) return false;
   const octetOk = (o: string) => {
     const n = parseInt(o, 10);
     return o !== '' && !isNaN(n) && n >= 0 && n <= 255;
   };
-  if (!octets.every(octetOk)) return false;
-  if (cidrPart !== undefined) {
-    const n = parseInt(cidrPart, 10);
-    if (cidrPart === '' || isNaN(n) || n < 0 || n > 32) return false;
+  return octets.every(octetOk);
+}
+
+function isIPv6(ipPart: string): boolean {
+  return IPv6_REGEX.test(ipPart.trim());
+}
+
+function isValidIpCidr(value: string): boolean {
+  const s = value.trim().toLowerCase();
+  if (!s) return false;
+  const [ipPart, cidrPart] = s.split('/');
+  if (!ipPart) return false;
+  if (ipPart.includes('.')) {
+    if (!isIPv4(ipPart)) return false;
+    if (cidrPart !== undefined) {
+      const n = parseInt(cidrPart, 10);
+      if (cidrPart === '' || isNaN(n) || n < 0 || n > 32) return false;
+    }
+    return true;
   }
-  return true;
+  if (ipPart.includes(':')) {
+    if (!isIPv6(ipPart)) return false;
+    if (cidrPart !== undefined) {
+      const n = parseInt(cidrPart, 10);
+      if (cidrPart === '' || isNaN(n) || n < 0 || n > 128) return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 const StreamFormSchema = z.object({
@@ -99,8 +122,10 @@ const DEFAULT_DETECTORS = {
 
 function normalizeIp(value: string): string {
   let s = value.trim().toLowerCase();
-  if (s.endsWith('/32')) {
-    s = s.slice(0, -3);
+  if (s.includes('.')) {
+    if (s.endsWith('/32')) s = s.slice(0, -3);
+  } else if (s.includes(':')) {
+    if (s.endsWith('/128')) s = s.slice(0, -4);
   }
   return s;
 }

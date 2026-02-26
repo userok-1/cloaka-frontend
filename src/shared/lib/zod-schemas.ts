@@ -44,7 +44,7 @@ export const StreamDetectorsOptionsDtoSchema = z
   })
   .catchall(z.boolean());
 
-const IpOrCidrSchema = z.string().min(1, 'Required').max(50);
+const IpOrCidrSchema = z.string().min(1, 'Required').max(60);
 
 export const CreateStreamDtoSchema = z.object({
   name: z.string().min(2).max(100),
