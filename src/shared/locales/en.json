@@ -98,7 +98,7 @@
     "activeStreams": "Active Streams",
     "noActiveStreams": "No active streams yet",
     "createFirstStream": "Create your first stream to get started",
-    "latestFilterLogs": "Latest filter logs",
+    "latestFilterLogs": "Latest Filter Logs",
     "noLatestFilterLogs": "No filter logs yet",
     "modeLabel": "{{mode}} mode",
     "andMore": "and {{count}} more..."
