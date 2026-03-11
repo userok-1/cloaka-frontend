@@ -98,6 +98,8 @@
     "activeStreams": "Активні потоки",
     "noActiveStreams": "Поки немає активних потоків",
     "createFirstStream": "Створіть перший потік, щоб почати",
+    "latestFilterLogs": "Останні логи фільтрування",
+    "noLatestFilterLogs": "Поки немає логів фільтрації",
     "modeLabel": "режим {{mode}}",
     "andMore": "та ще {{count}}..."
   },
