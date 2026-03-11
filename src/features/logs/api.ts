@@ -69,23 +69,28 @@ export const logsApi = {
     limit?: number;
     page?: number;
     sort?: 'asc' | 'desc';
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }) => {
-    const query = GetLogsQuery.parse({
-      page: params.page ?? 1,
-      limit: params.limit ?? 50,
-      sort: params.sort ?? 'desc',
-    });
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 50;
+    const sort = params.sort ?? 'desc';
     const response = await apiRequest<{
       data?: Array<Record<string, unknown>>;
       errors?: Array<Record<string, unknown>>;
       results?: Array<Record<string, unknown>>;
       items?: Array<Record<string, unknown>>;
       total?: number;
+      totalFiltered?: number;
     }>('/logger/errors', {
       params: {
-        page: query.page,
-        limit: query.limit,
-        sort: query.sort,
+        page,
+        limit,
+        sort,
+        ...(params.search?.trim() ? { search: params.search.trim() } : {}),
+        ...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
+        ...(params.dateTo ? { dateTo: params.dateTo } : {}),
       },
     });
 
@@ -127,7 +132,7 @@ export const logsApi = {
           item.timestamp ?? item.createdAt ?? item.created_at ?? ''
         ),
       })),
-      total: response?.total,
+      total: response?.totalFiltered ?? response?.total,
     };
     return ErrorLogsResponseSchema.parse(normalized);
   },

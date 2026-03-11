@@ -13,26 +13,27 @@ import { FILTER_REASON_OPTIONS } from '../../../shared/constants/reasonCodes';
 
 const LIMIT = 10;
 const SEARCH_DEBOUNCE_MS = 400;
+const FL = 'fl';
 
 export function FilterLogsTable() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [metadataModal, setMetadataModal] = useState<FilterLog | null>(null);
 
-  const urlSearch = searchParams.get('search') ?? '';
+  const urlSearch = searchParams.get(`${FL}Search`) ?? '';
   const [searchInput, setSearchInput] = useState(urlSearch);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const sort = (searchParams.get('sort') as 'asc' | 'desc') || 'desc';
-  const streamIds = searchParams.get('streamIds') ?? '';
-  const reasonParam = searchParams.get('reason');
+  const page = Math.max(1, parseInt(searchParams.get(`${FL}Page`) || '1', 10));
+  const sort = (searchParams.get(`${FL}Sort`) as 'asc' | 'desc') || 'desc';
+  const streamIds = searchParams.get(`${FL}StreamIds`) ?? '';
+  const reasonParam = searchParams.get(`${FL}Reason`);
   const reason = reasonParam ? parseInt(reasonParam, 10) : undefined;
-  const passedParam = searchParams.get('passed');
+  const passedParam = searchParams.get(`${FL}Passed`);
   const passed =
     passedParam === 'true' ? true : passedParam === 'false' ? false : undefined;
-  const dateFrom = searchParams.get('dateFrom') ?? '';
-  const dateTo = searchParams.get('dateTo') ?? '';
+  const dateFrom = searchParams.get(`${FL}DateFrom`) ?? '';
+  const dateTo = searchParams.get(`${FL}DateTo`) ?? '';
 
   const [reasonDropdownOpen, setReasonDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -53,11 +54,11 @@ export function FilterLogsTable() {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (searchInput.trim()) {
-          next.set('search', searchInput.trim());
-          next.set('page', '1');
+          next.set(`${FL}Search`, searchInput.trim());
+          next.set(`${FL}Page`, '1');
         } else {
-          next.delete('search');
-          next.delete('page');
+          next.delete(`${FL}Search`);
+          next.delete(`${FL}Page`);
         }
         return next;
       });
@@ -103,7 +104,7 @@ export function FilterLogsTable() {
   const updateParam = (key: string, value: string | number | undefined) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.delete('page');
+      next.delete(`${FL}Page`);
       if (value === '' || value === undefined) {
         next.delete(key);
       } else {
@@ -137,9 +138,27 @@ export function FilterLogsTable() {
   const handlePageChange = (newPage: number) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.set('page', String(newPage));
+      next.set(`${FL}Page`, String(newPage));
       return next;
     });
+  };
+
+  const clearFilters = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      [
+        `${FL}Search`,
+        `${FL}Page`,
+        `${FL}Sort`,
+        `${FL}DateFrom`,
+        `${FL}DateTo`,
+        `${FL}Passed`,
+        `${FL}Reason`,
+        `${FL}StreamIds`,
+      ].forEach((k) => next.delete(k));
+      return next;
+    });
+    setSearchInput('');
   };
 
   const selectedReason = reason != null ? FILTER_REASON_OPTIONS.find((r) => r.value === reason) : null;
@@ -161,7 +180,7 @@ export function FilterLogsTable() {
               dateFormat="dd.MM.yyyy"
               selected={dateFrom ? new Date(dateFrom) : null}
               onChange={(d: Date | null) =>
-                updateParam('dateFrom', d ? d.toISOString().slice(0, 10) : undefined)
+                updateParam(`${FL}DateFrom`, d ? d.toISOString().slice(0, 10) : undefined)
               }
               isClearable
               todayButton={t('common.today')}
@@ -176,7 +195,7 @@ export function FilterLogsTable() {
               dateFormat="dd.MM.yyyy"
               selected={dateTo ? new Date(dateTo) : null}
               onChange={(d: Date | null) =>
-                updateParam('dateTo', d ? d.toISOString().slice(0, 10) : undefined)
+                updateParam(`${FL}DateTo`, d ? d.toISOString().slice(0, 10) : undefined)
               }
               isClearable
               todayButton={t('common.today')}
@@ -211,7 +230,7 @@ export function FilterLogsTable() {
                   <button
                     type="button"
                     onClick={() => {
-                      updateParam('passed', undefined);
+                      updateParam(`${FL}Passed`, undefined);
                       setStatusDropdownOpen(false);
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-800 transition-colors"
@@ -222,7 +241,7 @@ export function FilterLogsTable() {
                   <button
                     type="button"
                     onClick={() => {
-                      updateParam('passed', 'true');
+                      updateParam(`${FL}Passed`, 'true');
                       setStatusDropdownOpen(false);
                     }}
                     className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
@@ -234,7 +253,7 @@ export function FilterLogsTable() {
                   <button
                     type="button"
                     onClick={() => {
-                      updateParam('passed', 'false');
+                      updateParam(`${FL}Passed`, 'false');
                       setStatusDropdownOpen(false);
                     }}
                     className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
@@ -269,7 +288,7 @@ export function FilterLogsTable() {
                   <button
                     type="button"
                     onClick={() => {
-                      updateParam('reason', undefined);
+                      updateParam(`${FL}Reason`, undefined);
                       setReasonDropdownOpen(false);
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-800 transition-colors"
@@ -282,7 +301,7 @@ export function FilterLogsTable() {
                       key={r.value}
                       type="button"
                       onClick={() => {
-                        updateParam('reason', r.value);
+                        updateParam(`${FL}Reason`, r.value);
                         setReasonDropdownOpen(false);
                       }}
                       className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
@@ -320,7 +339,7 @@ export function FilterLogsTable() {
                       key={s}
                       type="button"
                       onClick={() => {
-                        updateParam('sort', s);
+                        updateParam(`${FL}Sort`, s);
                         setSortDropdownOpen(false);
                       }}
                       className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
@@ -334,6 +353,16 @@ export function FilterLogsTable() {
               </div>
             )}
           </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            {t('common.clearFilters')}
+          </button>
         </div>
       </div>
 

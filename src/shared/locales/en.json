@@ -33,7 +33,8 @@
     "mode": "Mode",
     "reason": "Reason",
     "all": "All",
-    "total": "total"
+    "total": "total",
+    "clearFilters": "Clear filters"
   },
   "nav": {
     "home": "Home",

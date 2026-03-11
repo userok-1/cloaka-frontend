@@ -1,66 +1,229 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Eye, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, AlertTriangle, ChevronDown, X } from 'lucide-react';
+import DatePicker from 'react-datepicker';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { EmptyState } from '../../../shared/ui/EmptyState';
-import { Button } from '../../../shared/ui/Button';
 import { Modal } from '../../../shared/ui/Modal';
 import { logsApi } from '../api';
 import type { ErrorLog } from '../../../shared/lib/zod-schemas';
 
-const LIMIT = 50;
+const LIMIT = 10;
+const SEARCH_DEBOUNCE_MS = 400;
+const ERR = 'err';
 
 export function ErrorLogsTable() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedLog, setExpandedLog] = useState<ErrorLog | null>(null);
 
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const sort = (searchParams.get('sort') as 'asc' | 'desc') || 'desc';
+  const urlSearch = searchParams.get(`${ERR}Search`) ?? '';
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pendingRestoreFocusRef = useRef(false);
+  const prevFetchingRef = useRef(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['logs', 'errors', page, sort],
+  const page = Math.max(1, parseInt(searchParams.get(`${ERR}Page`) || '1', 10));
+  const sort = (searchParams.get(`${ERR}Sort`) as 'asc' | 'desc') || 'desc';
+  const dateFrom = searchParams.get(`${ERR}DateFrom`) ?? '';
+  const dateTo = searchParams.get(`${ERR}DateTo`) ?? '';
+
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSearchInput(urlSearch);
+  }, [urlSearch]);
+
+  useEffect(() => {
+    if (searchInput === urlSearch) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      pendingRestoreFocusRef.current = true;
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (searchInput.trim()) {
+          next.set(`${ERR}Search`, searchInput.trim());
+          next.set(`${ERR}Page`, '1');
+        } else {
+          next.delete(`${ERR}Search`);
+          next.delete(`${ERR}Page`);
+        }
+        return next;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchInput, urlSearch, setSearchParams]);
+
+  useEffect(() => {
+    if (!sortDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen]);
+
+  const updateParam = (key: string, value: string | undefined) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete(`${ERR}Page`);
+      if (value === '' || value === undefined) {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+      return next;
+    });
+  };
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ['logs', 'errors', page, sort, urlSearch, dateFrom, dateTo],
     queryFn: () =>
       logsApi.getErrors({
         page,
         limit: LIMIT,
         sort,
+        search: urlSearch.trim() || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
       }),
   });
 
   const logs = data?.data ?? [];
-  const canNextPage = logs.length === LIMIT;
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / LIMIT) || 1;
+  const isInitialLoading = isLoading && !data;
+
+  useEffect(() => {
+    if (prevFetchingRef.current && !isFetching && pendingRestoreFocusRef.current) {
+      pendingRestoreFocusRef.current = false;
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    }
+    prevFetchingRef.current = isFetching;
+  }, [isFetching]);
 
   const handlePageChange = (newPage: number) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.set('page', String(newPage));
+      next.set(`${ERR}Page`, String(newPage));
       return next;
     });
   };
 
-  const handleSortToggle = () => {
+  const clearFilters = () => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.delete('page');
-      next.set('sort', sort === 'desc' ? 'asc' : 'desc');
+      [`${ERR}Search`, `${ERR}Page`, `${ERR}Sort`, `${ERR}DateFrom`, `${ERR}DateTo`].forEach((k) =>
+        next.delete(k)
+      );
       return next;
     });
+    setSearchInput('');
   };
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return <LoadingState />;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-xl font-semibold text-zinc-100">{t('logs.errorLogs')}</h2>
-        <Button variant="secondary" onClick={handleSortToggle}>
-          {t('logs.sort')}: {sort === 'desc' ? t('logs.sortNewest') : t('logs.sortOldest')}
-        </Button>
+      <div className="space-y-4">
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder={t('common.searchPlaceholder')}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+        />
+        <div className="flex gap-2 flex-wrap items-center w-full">
+          <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+            <DatePicker
+              placeholderText={t('logs.dateFrom')}
+              dateFormat="dd.MM.yyyy"
+              selected={dateFrom ? new Date(dateFrom) : null}
+              onChange={(d: Date | null) =>
+                updateParam(`${ERR}DateFrom`, d ? d.toISOString().slice(0, 10) : undefined)
+              }
+              isClearable
+              todayButton={t('common.today')}
+              calendarClassName="datepicker-dark-theme"
+              popperClassName="datepicker-dark-theme-popper"
+              className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+            />
+          </div>
+          <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+            <DatePicker
+              placeholderText={t('logs.dateTo')}
+              dateFormat="dd.MM.yyyy"
+              selected={dateTo ? new Date(dateTo) : null}
+              onChange={(d: Date | null) =>
+                updateParam(`${ERR}DateTo`, d ? d.toISOString().slice(0, 10) : undefined)
+              }
+              isClearable
+              todayButton={t('common.today')}
+              calendarClassName="datepicker-dark-theme"
+              popperClassName="datepicker-dark-theme-popper"
+              className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors"
+            />
+          </div>
+          <div className="relative flex-1 min-w-[120px]" ref={sortDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setSortDropdownOpen((v) => !v)}
+              className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-zinc-900 border rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors text-left min-w-0 ${
+                sortDropdownOpen ? 'border-brand-500' : 'border-zinc-700'
+              }`}
+            >
+              <span className="truncate min-w-0">
+                {sort === 'desc' ? t('logs.sortNewest') : t('logs.sortOldest')}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 shrink-0 text-zinc-400 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {sortDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden min-w-[180px]">
+                <div className="max-h-60 overflow-y-auto py-1">
+                  {(['desc', 'asc'] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        updateParam(`${ERR}Sort`, s);
+                        setSortDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                        sort === s ? 'bg-zinc-800 text-brand-400' : 'text-zinc-200'
+                      }`}
+                    >
+                      {s === 'desc' ? t('logs.sortNewest') : t('logs.sortOldest')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            {t('common.clearFilters')}
+          </button>
+        </div>
       </div>
 
       {logs.length === 0 ? (
@@ -141,28 +304,33 @@ export function ErrorLogsTable() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              {t('common.page')} {page}
-              {data?.total != null && ` ${t('common.of')} ${Math.ceil(data.total / LIMIT)}`}
-            </p>
+          <div className="flex items-center justify-between pt-4">
+            <div className="text-sm text-zinc-400">
+              {t('common.page')}{' '}
+              <span className="font-medium text-zinc-100">{page}</span>{' '}
+              {t('common.of')}{' '}
+              <span className="font-medium text-zinc-100">{totalPages}</span>
+              {total > 0 && (
+                <span className="ml-2">
+                  · {total} {t('logs.totalLogs')}
+                </span>
+              )}
+            </div>
             <div className="flex gap-2">
-              <Button
-                variant="secondary"
+              <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                {t('common.prev')}
-              </Button>
-              <Button
-                variant="secondary"
+                <ChevronLeft className="w-4 h-4" /> {t('common.prev')}
+              </button>
+              <button
                 onClick={() => handlePageChange(page + 1)}
-                disabled={!canNextPage}
+                disabled={page >= totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {t('common.next')}
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
+                {t('common.next')} <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </>

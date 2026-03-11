@@ -227,6 +227,17 @@ export function StreamsListPage() {
     setSearchParams(next);
   };
 
+  const clearFilters = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      ['search', 'page', 'userId', 'mode', 'geo', 'dateFrom', 'dateTo', 'sort'].forEach((k) =>
+        next.delete(k)
+      );
+      return next;
+    });
+    setSearchInput('');
+  };
+
   const trashMutation = useMutation({
     mutationFn: streamsApi.trash,
     onSuccess: () => {
@@ -532,6 +543,16 @@ export function StreamsListPage() {
                 </div>
               )}
             </div>
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              {t('common.clearFilters')}
+            </button>
           </div>
         </div>
 
