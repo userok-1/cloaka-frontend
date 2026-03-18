@@ -19,7 +19,7 @@ export function FilterLogsPage() {
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const sort = (searchParams.get('sort') as 'asc' | 'desc') || 'desc';
-  const streamIds = searchParams.get('streamIds') || undefined;
+  const streamId = searchParams.get('streamId') || searchParams.get('streamIds') || undefined;
 
   const { data: streamsResponse } = useQuery({
     queryKey: ['streams', 'alive'],
@@ -36,13 +36,13 @@ export function FilterLogsPage() {
   }, [streams]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['logs', 'filter', page, sort, streamIds],
+    queryKey: ['logs', 'filter', page, sort, streamId],
     queryFn: () =>
       logsApi.getFilterLogs({
         page,
         limit: LIMIT,
         sort,
-        streamIds: streamIds || undefined,
+        streamId: streamId || undefined,
       }),
   });
 
@@ -62,8 +62,10 @@ export function FilterLogsPage() {
       const next = new URLSearchParams(prev);
       next.delete('page');
       if (streamId) {
-        next.set('streamIds', streamId);
+        next.set('streamId', streamId);
+        next.delete('streamIds');
       } else {
+        next.delete('streamId');
         next.delete('streamIds');
       }
       return next;
@@ -94,7 +96,7 @@ export function FilterLogsPage() {
           <h1 className="text-2xl font-semibold text-zinc-100">Filter Logs</h1>
           <div className="flex flex-wrap items-center gap-2">
             <select
-              value={streamIds ?? ''}
+              value={streamId ?? ''}
               onChange={(e) => handleStreamFilter(e.target.value)}
               className="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             >

@@ -235,22 +235,22 @@ export function ErrorLogsTable() {
       ) : (
         <>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[185px] whitespace-nowrap align-middle">
                     {t('common.time')}
                   </th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[86px] whitespace-nowrap align-middle">
                     {t('common.status')}
                   </th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[260px] align-middle">
                     {t('logs.context')}
                   </th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[260px] align-middle">
                     {t('logs.message')}
                   </th>
-                  <th className="text-right px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-zinc-400 w-[140px] whitespace-nowrap align-middle">
                     {t('common.actions')}
                   </th>
                 </tr>
@@ -266,10 +266,10 @@ export function ErrorLogsTable() {
                       key={log.id}
                       className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition-colors"
                     >
-                      <td className="px-6 py-4 text-sm text-zinc-300">
+                      <td className="px-6 py-4 text-sm text-zinc-300 whitespace-nowrap align-middle">
                         {new Date(log.createdAt).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 align-middle">
                         {log.statusCode && (
                           <span
                             className={`px-2 py-1 text-xs rounded ${
@@ -282,13 +282,13 @@ export function ErrorLogsTable() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-zinc-400 max-w-xs truncate">
+                      <td className="px-6 py-4 text-sm text-zinc-400 truncate align-middle">
                         {location || '—'}
                       </td>
-                      <td className="px-6 py-4 text-sm text-zinc-300 max-w-md truncate">
+                      <td className="px-6 py-4 text-sm text-zinc-300 truncate align-middle">
                         {log.message}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-4 text-left whitespace-nowrap align-middle">
                         <button
                           onClick={() => setExpandedLog(log)}
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs text-brand-400 hover:text-brand-300 hover:bg-zinc-800 rounded transition-colors"

@@ -26,7 +26,7 @@ export function FilterLogsTable() {
 
   const page = Math.max(1, parseInt(searchParams.get(`${FL}Page`) || '1', 10));
   const sort = (searchParams.get(`${FL}Sort`) as 'asc' | 'desc') || 'desc';
-  const streamIds = searchParams.get(`${FL}StreamIds`) ?? '';
+  const streamId = searchParams.get(`${FL}StreamId`) ?? searchParams.get(`${FL}StreamIds`) ?? '';
   const reasonParam = searchParams.get(`${FL}Reason`);
   const reason = reasonParam ? parseInt(reasonParam, 10) : undefined;
   const passedParam = searchParams.get(`${FL}Passed`);
@@ -115,13 +115,13 @@ export function FilterLogsTable() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ['logs', 'filter', page, sort, streamIds, urlSearch, reason, passed, dateFrom, dateTo],
+    queryKey: ['logs', 'filter', page, sort, streamId, urlSearch, reason, passed, dateFrom, dateTo],
     queryFn: () =>
       logsApi.getFilterLogs({
         page,
         limit: LIMIT,
         sort,
-        streamIds: streamIds || undefined,
+        streamId: streamId || undefined,
         search: urlSearch.trim() || undefined,
         reason,
         passed,
@@ -154,6 +154,7 @@ export function FilterLogsTable() {
         `${FL}DateTo`,
         `${FL}Passed`,
         `${FL}Reason`,
+        `${FL}StreamId`,
         `${FL}StreamIds`,
       ].forEach((k) => next.delete(k));
       return next;
@@ -376,23 +377,23 @@ export function FilterLogsTable() {
         />
       ) : (
         <>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-            <table className="w-full">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-x-auto">
+            <table className="w-max table-fixed">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[190px] whitespace-nowrap align-middle">
                     {t('common.time')}
                   </th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[220px] align-middle">
                     {t('logs.stream')}
                   </th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[140px] whitespace-nowrap align-middle">
                     {t('common.status')}
                   </th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-zinc-400 w-[340px] align-middle">
                     {t('common.reason')}
                   </th>
-                  <th className="text-right px-6 py-3 text-sm font-medium text-zinc-400">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-zinc-400 w-[160px] whitespace-nowrap align-middle">
                     {t('common.actions')}
                   </th>
                 </tr>
@@ -403,16 +404,16 @@ export function FilterLogsTable() {
                     key={log.id}
                     className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-sm text-zinc-300">
+                    <td className="px-6 py-4 text-sm text-zinc-300 whitespace-nowrap align-middle">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 align-middle">
                       <div className="text-sm font-medium text-zinc-200">
                         {log.streamName ?? `Stream #${log.streamId}`}
                       </div>
                       <div className="text-xs text-zinc-500">ID: {log.streamId}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 align-middle">
                       <span
                         className={
                           log.passed
@@ -423,10 +424,10 @@ export function FilterLogsTable() {
                         {log.passed ? t('logs.passed') : t('logs.blocked')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-400 max-w-xs truncate">
+                    <td className="px-6 py-4 text-sm text-zinc-400 truncate align-middle">
                       {log.reason ?? '—'}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 py-4 text-left whitespace-nowrap align-middle">
                       {log.metadata !== undefined && log.metadata !== null && (
                         <button
                           onClick={() => setMetadataModal(log)}

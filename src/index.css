@@ -161,3 +161,13 @@
 .datepicker-dark-theme.react-datepicker .react-datepicker__children-container {
   background-color: #18181b;
 }
+
+/* Align & inset react-datepicker clear (x) button */
+.react-datepicker__close-icon {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+}
+.react-datepicker__close-icon::after {
+  line-height: 1;
+}

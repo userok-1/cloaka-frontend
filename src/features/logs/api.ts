@@ -14,6 +14,8 @@ export const logsApi = {
     limit?: number;
     page?: number;
     sort?: 'asc' | 'desc';
+    streamId?: string;
+    /** @deprecated use streamId */
     streamIds?: string;
     search?: string;
     reason?: number;
@@ -25,7 +27,7 @@ export const logsApi = {
       page: params.page ?? 1,
       limit: params.limit ?? 50,
       sort: params.sort ?? 'desc',
-      streamIds: params.streamIds,
+      streamId: params.streamId ?? params.streamIds,
       search: params.search,
       reason: params.reason,
       passed: params.passed,
@@ -40,7 +42,7 @@ export const logsApi = {
         page: query.page,
         limit: query.limit,
         sort: query.sort,
-        ...(query.streamIds ? { streamIds: query.streamIds } : {}),
+        ...(query.streamId ? { streamId: query.streamId } : {}),
         ...(query.search?.trim() ? { search: query.search.trim() } : {}),
         ...(query.reason != null ? { reason: query.reason } : {}),
         ...(query.passed !== undefined ? { passed: query.passed } : {}),

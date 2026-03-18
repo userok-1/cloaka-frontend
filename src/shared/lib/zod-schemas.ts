@@ -161,7 +161,7 @@ export const GetLogsQuery = z.object({
   page: z.number().int().min(1).optional().default(1),
   limit: z.number().int().min(1).max(1000).optional().default(50),
   sort: SortOrderSchema.optional().default('desc'),
-  streamIds: z.string().optional(),
+  streamId: z.string().optional(),
   search: z.string().optional(),
   reason: z.number().int().min(1).optional(),
   passed: z.boolean().optional(),
