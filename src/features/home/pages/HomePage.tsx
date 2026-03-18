@@ -90,6 +90,7 @@ export function HomePage() {
   const { data: streamsResponse } = useQuery({
     queryKey: ['streams', 'alive', 'home-filters'],
     queryFn: () => streamsApi.getAll({ scope: 'alive', limit: 500 }),
+    enabled: filtersMounted,
   });
   const streams = streamsResponse?.data ?? [];
 
