@@ -178,14 +178,14 @@ export function HomePage() {
 
             {filtersMounted && (
               <div
-                className={`absolute right-0 mt-2 z-50 w-[min(720px,calc(100vw-2rem))] bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-4 overflow-visible origin-top-right transition-all duration-150 ease-out ${
+                className={`absolute right-0 mt-2 z-50 w-[min(60vw,720px)] max-w-[calc(25vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl p-4 overflow-visible origin-top-right transition-all duration-150 ease-out ${
                   filtersVisible
                     ? 'opacity-100 translate-y-0 scale-100'
                     : 'opacity-0 -translate-y-1 scale-95 pointer-events-none'
                 }`}
               >
-                <div className="flex gap-2 flex-wrap items-center w-full">
-                  <div className="relative flex-1 min-w-[180px]">
+                <div className="space-y-2 w-full">
+                  <div className="relative w-full">
                     <select
                       value={streamId}
                       onChange={(e) => updateParam('streamId', e.target.value || undefined)}
@@ -201,7 +201,7 @@ export function HomePage() {
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   </div>
 
-                  <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+                  <div className="w-full [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
                     <DatePicker
                       placeholderText={t('logs.dateFrom')}
                       dateFormat="dd.MM.yyyy"
@@ -217,7 +217,7 @@ export function HomePage() {
                     />
                   </div>
 
-                  <div className="flex-1 min-w-[140px] min-w-0 [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
+                  <div className="w-full [&_.react-datepicker-wrapper]:block [&_.react-datepicker-wrapper]:w-full">
                     <DatePicker
                       placeholderText={t('logs.dateTo')}
                       dateFormat="dd.MM.yyyy"
