@@ -98,7 +98,10 @@ export function HomePage() {
     queryKey: ['statistics', 'dashboard', streamId, dateFrom, dateTo],
     queryFn: () =>
       dashboardApi.getDashboardStats({
-        streamId: streamId || undefined,
+        streamId:
+          streamId && !Number.isNaN(Number(streamId))
+            ? Number(streamId)
+            : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       }),
@@ -191,7 +194,7 @@ export function HomePage() {
                       <option value="">{t('logs.allStreams')}</option>
                       {streams.map((s) => (
                         <option key={s.id} value={String(s.id)}>
-                          {s.name}
+                          {`${s.name} (ID: ${s.id})`}
                         </option>
                       ))}
                     </select>

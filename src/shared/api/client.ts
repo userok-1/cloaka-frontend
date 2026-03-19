@@ -19,7 +19,14 @@ export async function apiRequest<TResponse = void, TBody = unknown>(
   options?: {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     body?: TBody;
-    params?: Record<string, string | number | boolean | undefined>;
+    params?: Record<
+      string,
+      | string
+      | number
+      | boolean
+      | undefined
+      | Array<string | number | boolean | undefined>
+    >;
   }
 ): Promise<TResponse> {
   const { method = 'GET', body, params } = options || {};
@@ -29,6 +36,13 @@ export async function apiRequest<TResponse = void, TBody = unknown>(
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item !== undefined) searchParams.append(key, String(item));
+        });
+        return;
+      }
+
       if (value !== undefined) {
         searchParams.append(key, String(value));
       }
