@@ -35,6 +35,21 @@ export const UserLoginDtoSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
+export const UpdateProfileDtoSchema = z.object({
+  name: z.string().max(100).optional(),
+  email: z.string().email().min(5).max(150),
+});
+
+export const ChangePasswordDtoSchema = z.object({
+  currentPassword: z.string().min(8).max(128),
+  newPassword: z
+    .string()
+    .min(8)
+    .max(128)
+    .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
+    .regex(/\d/, 'Password must contain at least one digit'),
+});
+
 export const StreamDetectorsOptionsDtoSchema = z
   .object({
     userAgent: z.boolean().optional(),
@@ -190,6 +205,8 @@ export type GetStreamsResponse = z.infer<typeof GetStreamsResponseSchema>;
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type UserRegisterDto = z.infer<typeof UserRegisterDtoSchema>;
 export type UserLoginDto = z.infer<typeof UserLoginDtoSchema>;
+export type UpdateProfileDto = z.infer<typeof UpdateProfileDtoSchema>;
+export type ChangePasswordDto = z.infer<typeof ChangePasswordDtoSchema>;
 export type CreateStreamDto = z.infer<typeof CreateStreamDtoSchema>;
 export type UpdateStreamDto = z.infer<typeof UpdateStreamDtoSchema>;
 export type GetStreamsDto = z.infer<typeof GetStreamsDtoSchema>;

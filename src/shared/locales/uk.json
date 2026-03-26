@@ -77,12 +77,31 @@
     "passwordLetter": "Пароль має містити хоча б одну літеру",
     "passwordDigit": "Пароль має містити хоча б одну цифру",
     "nameRequired": "Ім'я обов'язкове",
-    "nameMin": "Ім'я має містити мінімум 2 символи"
+    "nameMin": "Ім'я має містити мінімум 2 символи",
+    "currentPasswordRequired": "Поточний пароль обов'язковий",
+    "confirmPasswordRequired": "Підтвердіть новий пароль",
+    "passwordsMustMatch": "Паролі не збігаються"
   },
   "profile": {
     "title": "Профіль",
     "userId": "ID користувача",
-    "memberSince": "Учасник з"
+    "memberSince": "Учасник з",
+    "accountSection": "Обліковий запис",
+    "profileDetails": "Дані профілю",
+    "profileDetailsHint": "Оновіть ім'я та email.",
+    "changePassword": "Зміна пароля",
+    "changePasswordHint": "Введіть поточний пароль і новий пароль.",
+    "profileUpdated": "Профіль оновлено",
+    "profileUpdateFailed": "Не вдалося оновити профіль",
+    "passwordChanged": "Пароль змінено",
+    "passwordChangeFailed": "Не вдалося змінити пароль",
+    "namePlaceholder": "Ваше ім'я (необов'язково)",
+    "currentPassword": "Поточний пароль",
+    "newPassword": "Новий пароль",
+    "confirmNewPassword": "Підтвердження пароля",
+    "savePassword": "Оновити пароль",
+    "tabGeneral": "Інформація",
+    "tabEdit": "Редагування"
   },
   "home": {
     "title": "Панель керування",

@@ -8,6 +8,7 @@ import { LoadingState } from '../../../shared/ui/LoadingState';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Modal } from '../../../shared/ui/Modal';
 import { logsApi } from '../api';
+import { formatMetadataForDisplay } from '../../../shared/lib/format-metadata';
 import type { ErrorLog } from '../../../shared/lib/zod-schemas';
 
 const LIMIT = 10;
@@ -378,10 +379,8 @@ export function ErrorLogsTable() {
             {expandedLog.metadata !== null && expandedLog.metadata !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.fullMetadata')}</h3>
-                <pre className="text-xs text-zinc-300 overflow-auto max-h-64 p-3 bg-zinc-950 rounded border border-zinc-800">
-                  {typeof expandedLog.metadata === 'object'
-                    ? JSON.stringify(expandedLog.metadata, null, 2)
-                    : String(expandedLog.metadata)}
+                <pre className="text-xs text-zinc-300 overflow-y-auto max-h-[min(70vh,24rem)] p-3 bg-zinc-950 rounded border border-zinc-800 whitespace-pre-wrap break-words">
+                  {formatMetadataForDisplay(expandedLog.metadata)}
                 </pre>
               </div>
             )}

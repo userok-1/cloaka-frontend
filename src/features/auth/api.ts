@@ -1,7 +1,9 @@
 import { apiRequest } from '../../shared/api/client';
 import {
+  ChangePasswordDto,
   PublicUser,
   PublicUserSchema,
+  UpdateProfileDto,
   UserLoginDto,
   UserRegisterDto,
 } from '../../shared/lib/zod-schemas';
@@ -36,5 +38,21 @@ export const authApi = {
     } catch {
       return null;
     }
+  },
+
+  /** PATCH body: name (optional), email */
+  updateProfile: async (data: UpdateProfileDto): Promise<PublicUser> => {
+    const response = await apiRequest<unknown, UpdateProfileDto>('/auth/me', {
+      method: 'PATCH',
+      body: data,
+    });
+    return PublicUserSchema.parse(response);
+  },
+
+  changePassword: async (data: ChangePasswordDto): Promise<void> => {
+    await apiRequest<void, ChangePasswordDto>('/auth/change-password', {
+      method: 'POST',
+      body: data,
+    });
   },
 };

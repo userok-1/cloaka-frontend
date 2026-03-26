@@ -10,6 +10,7 @@ import { Modal } from '../../../shared/ui/Modal';
 import { logsApi } from '../api';
 import type { FilterLog } from '../../../shared/lib/zod-schemas';
 import { FILTER_REASON_OPTIONS } from '../../../shared/constants/reasonCodes';
+import { formatMetadataForDisplay } from '../../../shared/lib/format-metadata';
 
 const LIMIT = 10;
 const SEARCH_DEBOUNCE_MS = 400;
@@ -554,10 +555,8 @@ export function FilterLogsTable() {
             {metadataModal.metadata !== null && metadataModal.metadata !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-zinc-400 mb-1">{t('logs.fullMetadata')}</h3>
-                <pre className="text-xs text-zinc-300 overflow-auto max-h-64 p-3 bg-zinc-950 rounded border border-zinc-800">
-                  {typeof metadataModal.metadata === 'object'
-                    ? JSON.stringify(metadataModal.metadata, null, 2)
-                    : String(metadataModal.metadata)}
+                <pre className="text-xs text-zinc-300 overflow-y-auto max-h-[min(70vh,24rem)] p-3 bg-zinc-950 rounded border border-zinc-800 whitespace-pre-wrap break-words">
+                  {formatMetadataForDisplay(metadataModal.metadata)}
                 </pre>
               </div>
             )}

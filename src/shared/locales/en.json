@@ -77,12 +77,31 @@
     "passwordLetter": "Password must contain at least one letter",
     "passwordDigit": "Password must contain at least one digit",
     "nameRequired": "Name is required",
-    "nameMin": "Name must be at least 2 characters"
+    "nameMin": "Name must be at least 2 characters",
+    "currentPasswordRequired": "Current password is required",
+    "confirmPasswordRequired": "Confirm your new password",
+    "passwordsMustMatch": "Passwords do not match"
   },
   "profile": {
     "title": "Profile",
     "userId": "User ID",
-    "memberSince": "Member Since"
+    "memberSince": "Member Since",
+    "accountSection": "Account",
+    "profileDetails": "Profile details",
+    "profileDetailsHint": "Update your display name and email.",
+    "changePassword": "Change password",
+    "changePasswordHint": "Enter your current password and choose a new one.",
+    "profileUpdated": "Profile updated",
+    "profileUpdateFailed": "Could not update profile",
+    "passwordChanged": "Password changed",
+    "passwordChangeFailed": "Could not change password",
+    "namePlaceholder": "Your name (optional)",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "savePassword": "Update password",
+    "tabGeneral": "Overview",
+    "tabEdit": "Edit"
   },
   "home": {
     "title": "Dashboard",

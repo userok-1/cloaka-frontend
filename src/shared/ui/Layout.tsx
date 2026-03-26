@@ -80,7 +80,7 @@ export function Layout({ children }: LayoutProps) {
       <aside
         className={`${
           collapsed ? 'w-16' : 'w-64'
-        } bg-zinc-900 border-r border-zinc-800 flex flex-col transition-all duration-200`}
+        } bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden transition-[width] duration-300 ease-out`}
       >
         <div className="h-28 flex items-center justify-between px-4 border-b border-zinc-800">
           {!collapsed && (
@@ -103,7 +103,7 @@ export function Layout({ children }: LayoutProps) {
           </button>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 min-w-0">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -111,41 +111,64 @@ export function Layout({ children }: LayoutProps) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                title={collapsed ? t(item.labelKey) : undefined}
+                className={`group flex items-center gap-3 px-3 py-2 rounded-lg min-w-0 transition-colors duration-200 ${
                   isActive
                     ? 'bg-zinc-800 text-zinc-100'
                     : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
                 }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{t(item.labelKey)}</span>}
+                <Icon className="w-5 h-5 flex-shrink-0 transition-colors duration-200 group-hover:text-zinc-100" />
+                <span
+                  className={`block min-w-0 overflow-hidden text-sm font-medium whitespace-nowrap transition-[max-width,opacity] duration-300 ease-out ${
+                    collapsed
+                      ? 'max-w-0 opacity-0'
+                      : 'max-w-[14rem] opacity-100 delay-100'
+                  }`}
+                >
+                  {t(item.labelKey)}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t border-zinc-800 space-y-1">
+        <div className="p-3 border-t border-zinc-800 space-y-1 min-w-0">
           <Link
             to="/help"
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            title={collapsed ? t('nav.help') : undefined}
+            className={`group flex items-center gap-3 px-3 py-2 rounded-lg min-w-0 transition-colors duration-200 ${
               location.pathname === '/help'
                 ? 'bg-zinc-800 text-zinc-100'
                 : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
             }`}
           >
-            <HelpCircle className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">{t('nav.help')}</span>}
+            <HelpCircle className="w-5 h-5 flex-shrink-0 transition-colors duration-200 group-hover:text-zinc-100" />
+            <span
+              className={`block min-w-0 overflow-hidden text-sm font-medium whitespace-nowrap transition-[max-width,opacity] duration-300 ease-out ${
+                collapsed ? 'max-w-0 opacity-0' : 'max-w-[14rem] opacity-100 delay-100'
+              }`}
+            >
+              {t('nav.help')}
+            </span>
           </Link>
           <Link
             to="/profile"
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+            title={collapsed ? t('nav.settings') : undefined}
+            className={`group flex items-center gap-3 px-3 py-2 rounded-lg min-w-0 transition-colors duration-200 ${
               location.pathname === '/profile'
                 ? 'bg-zinc-800 text-zinc-100'
                 : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
             }`}
           >
-            <Settings className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">{t('nav.settings')}</span>}
+            <Settings className="w-5 h-5 flex-shrink-0 transition-colors duration-200 group-hover:text-zinc-100" />
+            <span
+              className={`block min-w-0 overflow-hidden text-sm font-medium whitespace-nowrap transition-[max-width,opacity] duration-300 ease-out ${
+                collapsed ? 'max-w-0 opacity-0' : 'max-w-[14rem] opacity-100 delay-100'
+              }`}
+            >
+              {t('nav.settings')}
+            </span>
           </Link>
         </div>
       </aside>
