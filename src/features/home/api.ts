@@ -13,7 +13,7 @@ export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
 
 export const dashboardApi = {
   getDashboardStats: async (params?: {
-    streamId?: number;
+    streamIds?: number[];
     dateFrom?: string;
     dateTo?: string;
   }): Promise<DashboardStats> => {
@@ -21,8 +21,8 @@ export const dashboardApi = {
       '/statistics/dashboard',
       {
         params: {
-          ...(params?.streamId != null && params.streamId >= 1
-            ? { streamId: params.streamId }
+          ...(params?.streamIds && params.streamIds.length > 0
+            ? { streamIds: params.streamIds }
             : {}),
           ...(params?.dateFrom ? { dateFrom: params.dateFrom } : {}),
           ...(params?.dateTo ? { dateTo: params.dateTo } : {}),

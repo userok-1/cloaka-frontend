@@ -31,10 +31,11 @@ export function HomePage() {
   const filtersRef = useRef<HTMLDivElement>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const streamId = searchParams.get('streamId') ?? '';
+  const streamIdsParam = searchParams.get('streamIds') ?? '';
+  const selectedStreamId = streamIdsParam ? streamIdsParam.split(',')[0] : '';
   const dateFrom = searchParams.get('dateFrom') ?? '';
   const dateTo = searchParams.get('dateTo') ?? '';
-  const filtersActive = Boolean(streamId || dateFrom || dateTo);
+  const filtersActive = Boolean(streamIdsParam || dateFrom || dateTo);
 
   const closeFilters = () => setFiltersOpen(false);
 
@@ -82,7 +83,7 @@ export function HomePage() {
   const clearFilters = () => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      ['streamId', 'dateFrom', 'dateTo'].forEach((k) => next.delete(k));
+      ['streamIds', 'dateFrom', 'dateTo'].forEach((k) => next.delete(k));
       return next;
     });
   };
@@ -95,12 +96,12 @@ export function HomePage() {
   const streams = streamsResponse?.data ?? [];
 
   const { data: dashboardStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['statistics', 'dashboard', streamId, dateFrom, dateTo],
+    queryKey: ['statistics', 'dashboard', streamIdsParam, dateFrom, dateTo],
     queryFn: () =>
       dashboardApi.getDashboardStats({
-        streamId:
-          streamId && !Number.isNaN(Number(streamId))
-            ? Number(streamId)
+        streamIds:
+          selectedStreamId && !Number.isNaN(Number(selectedStreamId))
+            ? [Number(selectedStreamId)]
             : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
@@ -108,13 +109,13 @@ export function HomePage() {
   });
 
   const { data: recentFilterLogsResponse, isLoading: recentLogsLoading } = useQuery({
-    queryKey: ['logs', 'home', 'recent', streamId, dateFrom, dateTo],
+    queryKey: ['logs', 'home', 'recent', selectedStreamId, dateFrom, dateTo],
     queryFn: () =>
       logsApi.getFilterLogs({
         page: 1,
         limit: 5,
         sort: 'desc',
-        streamId: streamId || undefined,
+        streamId: selectedStreamId || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       }),
@@ -187,8 +188,8 @@ export function HomePage() {
                 <div className="space-y-2 w-full">
                   <div className="relative w-full">
                     <select
-                      value={streamId}
-                      onChange={(e) => updateParam('streamId', e.target.value || undefined)}
+                      value={selectedStreamId}
+                      onChange={(e) => updateParam('streamIds', e.target.value || undefined)}
                       className="w-full px-3 py-2 pr-10 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-inset hover:border-brand-500 transition-colors appearance-none"
                     >
                       <option value="">{t('logs.allStreams')}</option>
