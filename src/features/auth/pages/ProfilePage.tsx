@@ -3,7 +3,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Shield, Calendar, LogOut, Eye, EyeOff, Hash } from 'lucide-react';
+import {
+  User,
+  Mail,
+  Shield,
+  Calendar,
+  LogOut,
+  Eye,
+  EyeOff,
+  Hash,
+  Key,
+  ClipboardCopy,
+} from 'lucide-react';
 import { z } from 'zod';
 import { useAuthStore } from '../store';
 import { authApi } from '../api';
@@ -33,6 +44,9 @@ export function ProfilePage() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>('general');
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
 
   const updateProfileSchema = useMemo(() => createUpdateProfileSchema(t), [t, i18n.language]);
   const changePasswordSchema = useMemo(() => createChangePasswordFormSchema(t), [t, i18n.language]);
@@ -81,6 +95,33 @@ export function ProfilePage() {
       }
     } finally {
       setProfileLoading(false);
+    }
+  };
+
+  const handleRevealApiKey = async () => {
+    if (apiKey !== null) {
+      setShowApiKey(true);
+      return;
+    }
+    setApiKeyLoading(true);
+    try {
+      const key = await authApi.getApiKey();
+      setApiKey(key);
+      setShowApiKey(true);
+    } catch {
+      // api client already surfaces errors; keep UI state consistent
+    } finally {
+      setApiKeyLoading(false);
+    }
+  };
+
+  const handleCopyApiKey = async () => {
+    if (!apiKey) return;
+    try {
+      await navigator.clipboard.writeText(apiKey);
+      toast.success(t('profile.apiKeyCopied'));
+    } catch {
+      toast.error(t('profile.apiKeyCopyFailed'));
     }
   };
 
@@ -205,6 +246,51 @@ export function ProfilePage() {
                           month: 'long',
                           day: 'numeric',
                         })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <Key className="w-5 h-5 text-zinc-400 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="text-sm text-zinc-500 mb-0.5">{t('profile.apiKey')}</div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <div className="text-zinc-100 font-mono text-sm break-all min-h-[1.25rem]">
+                          {showApiKey && apiKey ? apiKey : '••••••••••••••••'}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {!showApiKey && (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={handleRevealApiKey}
+                              disabled={apiKeyLoading}
+                            >
+                              {apiKeyLoading ? t('common.loading') : t('profile.showApiKey')}
+                            </Button>
+                          )}
+                          {apiKey !== null && showApiKey && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setShowApiKey(false)}
+                                className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                                aria-label={t('profile.hideApiKey')}
+                              >
+                                <EyeOff className="w-5 h-5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCopyApiKey}
+                                className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                                aria-label={t('profile.copyApiKey')}
+                              >
+                                <ClipboardCopy className="w-5 h-5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

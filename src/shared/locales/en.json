@@ -101,7 +101,13 @@
     "confirmNewPassword": "Confirm new password",
     "savePassword": "Update password",
     "tabGeneral": "Overview",
-    "tabEdit": "Edit"
+    "tabEdit": "Edit",
+    "apiKey": "API key",
+    "showApiKey": "Show",
+    "hideApiKey": "Hide",
+    "copyApiKey": "Copy",
+    "apiKeyCopied": "API key copied",
+    "apiKeyCopyFailed": "Could not copy to clipboard"
   },
   "home": {
     "title": "Dashboard",

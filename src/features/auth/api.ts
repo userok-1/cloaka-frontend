@@ -1,5 +1,6 @@
 import { apiRequest } from '../../shared/api/client';
 import {
+  ApiKeyResponseSchema,
   ChangePasswordDto,
   PublicUser,
   PublicUserSchema,
@@ -54,5 +55,18 @@ export const authApi = {
       method: 'POST',
       body: data,
     });
+  },
+
+  getApiKey: async (): Promise<string> => {
+    const response = await apiRequest<unknown>('/auth/api-key');
+    const parsed = ApiKeyResponseSchema.safeParse(response);
+    if (!parsed.success) {
+      throw new Error('Invalid API key response');
+    }
+    const key = parsed.data.apiKey ?? parsed.data.key;
+    if (!key) {
+      throw new Error('Invalid API key response');
+    }
+    return key;
   },
 };

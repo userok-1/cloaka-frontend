@@ -50,6 +50,14 @@ export const ChangePasswordDtoSchema = z.object({
     .regex(/\d/, 'Password must contain at least one digit'),
 });
 
+/** GET /auth/api-key — backend may use `apiKey` or `key` */
+export const ApiKeyResponseSchema = z
+  .object({
+    apiKey: z.string().optional(),
+    key: z.string().optional(),
+  })
+  .passthrough();
+
 export const StreamDetectorsOptionsDtoSchema = z
   .object({
     userAgent: z.boolean().optional(),

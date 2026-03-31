@@ -101,7 +101,13 @@
     "confirmNewPassword": "Підтвердження пароля",
     "savePassword": "Оновити пароль",
     "tabGeneral": "Інформація",
-    "tabEdit": "Редагування"
+    "tabEdit": "Редагування",
+    "apiKey": "API ключ",
+    "showApiKey": "Показати",
+    "hideApiKey": "Приховати",
+    "copyApiKey": "Копіювати",
+    "apiKeyCopied": "API ключ скопійовано",
+    "apiKeyCopyFailed": "Не вдалося скопіювати в буфер"
   },
   "home": {
     "title": "Панель керування",
